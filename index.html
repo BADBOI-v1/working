@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kingbadboi Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Kingbadboi Store</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">Downloads</a>
+            <a href="#">Account</a>
+            <a href="#">Search</a>
+            <a href="#" id="login-link">Login/Register</a>
+        </nav>
+    </header>
+
+    <main id="content">
+        <!-- Content will be dynamically loaded here -->
+        <section id="home" class="hidden">
+            <h2>Welcome to Kingbadboi Store!</h2>
+            <p>Discover amazing files and connect with others.</p>
+        </section>
+
+        <section id="downloads" class="hidden">
+            <h2>Available Downloads</h2>
+            <div id="file-container">
+                <!-- File circles will be dynamically added here -->
+            </div>
+        </section>
+
+        <section id="account" class="hidden">
+            <h2>My Account</h2>
+            <p>Username: <span id="account-username"></span></p>
+            <p>Followers: <span id="account-followers"></span></p>
+            <p>Following: <span id="account-following"></span></p>
+        </section>
+
+        <section id="search" class="hidden">
+            <h2>Search Files</h2>
+            <input type="text" id="search-input" placeholder="Enter file name">
+            <button id="search-button">Search</button>
+            <div id="search-results">
+                <!-- Search results will be displayed here -->
+            </div>
+        </section>
+
+         <!-- Login/Registration Modal -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Login / Register</h2>
+                <div id="login-form">
+                    <h3>Login</h3>
+                    <input type="text" id="login-username" placeholder="Username"><br>
+                    <input type="password" id="login-password" placeholder="Password"><br>
+                    <button id="login-submit">Login</button>
+                </div>
+                <div id="register-form">
+                    <h3>Register</h3>
+                    <input type="text" id="register-username" placeholder="Username"><br>
+                    <input type="password" id="register-password" placeholder="Password"><br>
+                    <input type="password" id="register-confirm-password" placeholder="Confirm Password"><br>
+                    <button id="register-submit">Register</button>
+                </div>
+                <div id="admin-login-form">
+                    <h3>Admin Login</h3>
+                    <input type="text" id="admin-username" placeholder="Admin Username"><br>
+                    <input type="password" id="admin-password" placeholder="Admin Password"><br>
+                    <button id="admin-login-submit">Admin Login</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Kingbadboi Store</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
