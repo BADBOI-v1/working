@@ -244,6 +244,3 @@ function showNotification(message, color = 'blue') {
 addLogEntry('[INFO] Initializing connection...');
 
 // Clear demo interval if it exists (from the HTML demo)
-if (window.demoInterval) {
-  clearInterval(window.demoInterval);
-    }
