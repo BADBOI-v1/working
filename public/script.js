@@ -147,3 +147,12 @@ socket.on('fileList', (files) => {
 socket.on('fileContent', (content) => {
     fileContent.value = content;
 });
+
+// Add new event handler for auto deployment status
+socket.on('deploymentStatus', (message) => {
+    const logEntry = document.createElement('div');
+    logEntry.textContent = message;
+    logEntry.style.color = '#4caf50'; // Green color for deployment messages
+    logDisplay.appendChild(logEntry);
+    logDisplay.scrollTop = logDisplay.scrollHeight;
+});
