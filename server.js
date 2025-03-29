@@ -1,5 +1,5 @@
 const express = require('express');
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -38,6 +38,84 @@ function formatUptime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
+}
+
+// Function to find package.json in extracted zip contents
+function findPackageJson(directory) {
+    let packageJsonPath = null;
+    
+    function searchDir(dir, depth = 0) {
+        if (depth > 5) return; // Limit search depth to prevent infinite recursion
+        
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            
+            if (entry.isDirectory()) {
+                searchDir(fullPath, depth + 1);
+            } else if (entry.name === 'package.json') {
+                packageJsonPath = path.dirname(fullPath);
+                return;
+            }
+        }
+    }
+    
+    searchDir(directory);
+    return packageJsonPath;
+}
+
+// Function to deploy a Node.js application
+function deployNodeApp(projectPath, socket) {
+    socket.emit('deploymentStatus', `Starting deployment from: ${projectPath}`);
+    
+    // Change to the project directory
+    process.chdir(projectPath);
+    
+    // Install dependencies
+    socket.emit('deploymentStatus', 'Installing dependencies...');
+    exec('npm install', (error, stdout, stderr) => {
+        if (error) {
+            socket.emit('deploymentStatus', `Deployment error: ${error.message}`);
+            return;
+        }
+        
+        if (stderr) {
+            socket.emit('deploymentStatus', `npm warning: ${stderr}`);
+        }
+        
+        socket.emit('deploymentStatus', `Dependencies installed: ${stdout}`);
+        
+        // Check if there's a start script in package.json
+        try {
+            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            
+            if (packageJson.scripts && packageJson.scripts.start) {
+                socket.emit('deploymentStatus', 'Starting application...');
+                
+                // Start the application using npm start
+                const child = spawn('npm', ['start'], { detached: true });
+                
+                child.stdout.on('data', (data) => {
+                    socket.emit('deploymentStatus', `App output: ${data.toString()}`);
+                });
+                
+                child.stderr.on('data', (data) => {
+                    socket.emit('deploymentStatus', `App error: ${data.toString()}`);
+                });
+                
+                child.on('close', (code) => {
+                    socket.emit('deploymentStatus', `Application exited with code ${code}`);
+                });
+                
+                socket.emit('deploymentStatus', 'Application deployed successfully!');
+            } else {
+                socket.emit('deploymentStatus', 'No start script found in package.json');
+            }
+        } catch (err) {
+            socket.emit('deploymentStatus', `Error reading package.json: ${err.message}`);
+        }
+    });
 }
 
 io.on('connection', (socket) => {
@@ -105,11 +183,27 @@ io.on('connection', (socket) => {
                 } else {
                     socket.emit('log', `File ${filename} uploaded successfully`);
                     
+                    // Create a unique extraction directory to prevent conflicts
+                    const extractionDir = `extracted_${Date.now()}`;
+                    fs.mkdirSync(extractionDir, { recursive: true });
+                    
                     // Extract the zip file
                     try {
                         const zip = new AdmZip(filename);
-                        zip.extractAllTo("./", true);
-                        socket.emit('log', `Extracted zip file ${filename} successfully`);
+                        zip.extractAllTo(extractionDir, true);
+                        socket.emit('log', `Extracted zip file ${filename} to ${extractionDir} successfully`);
+                        
+                        // Look for package.json in the extracted directory
+                        const packageJsonDir = findPackageJson(extractionDir);
+                        
+                        if (packageJsonDir) {
+                            socket.emit('log', `Found Node.js project at: ${packageJsonDir}`);
+                            
+                            // Auto deploy the application
+                            deployNodeApp(packageJsonDir, socket);
+                        } else {
+                            socket.emit('log', 'No Node.js project found in the uploaded zip file');
+                        }
                     } catch (err) {
                         socket.emit('log', `Failed to extract zip file: ${err}`);
                     }
