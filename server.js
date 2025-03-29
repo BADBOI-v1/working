@@ -18,9 +18,15 @@ const io = socketIO(server);
 
 // Function to get resource usage
 function getResourceUsage() {
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
+    const ramUsageBytes = totalMemory - freeMemory;
+    const ramUsageGB = ramUsageBytes / (1024 ** 3);
+    const formattedRamUsage = ramUsageGB.toFixed(2);
+
     return {
         cpu: `${os.loadavg()[0].toFixed(2)}%`,
-        ram: `${(os.totalmem() - os.freemem()) / (1024 ** 3)).toFixed(2)}GB`,
+        ram: `${formattedRamUsage}GB`,
         disk: 'N/A', // Requires more complex implementation
         uptime: formatUptime(process.uptime())
     };
