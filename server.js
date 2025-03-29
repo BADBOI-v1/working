@@ -15,6 +15,9 @@ if (!fs.existsSync(storageDir)) {
     fs.mkdirSync(storageDir, { recursive: true });
 }
 
+// Keep track of user uploaded files for security
+const uploadedFiles = new Set();
+
 app.use(express.static(path.join(__dirname, 'public')));
 // Also serve files from storage directory
 app.use('/storage', express.static(path.join(__dirname, 'storage')));
@@ -48,24 +51,33 @@ function formatUptime(seconds) {
     return `${hours}h ${minutes}m`;
 }
 
-// Function to find package.json in extracted zip contents
+// Improved function to find package.json in extracted zip contents
 function findPackageJson(directory) {
     let packageJsonPath = null;
     
     function searchDir(dir, depth = 0) {
-        if (depth > 5) return; // Limit search depth to prevent infinite recursion
+        if (depth > 10) return; // Increased search depth to find deeply nested package.json
         
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        
-        for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
+        try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
             
-            if (entry.isDirectory()) {
-                searchDir(fullPath, depth + 1);
-            } else if (entry.name === 'package.json') {
-                packageJsonPath = path.dirname(fullPath);
+            // First check if package.json exists in this directory
+            if (entries.some(entry => entry.name === 'package.json')) {
+                packageJsonPath = dir;
                 return;
             }
+            
+            // If not, search in subdirectories
+            for (const entry of entries) {
+                if (entry.isDirectory()) {
+                    const fullPath = path.join(dir, entry.name);
+                    searchDir(fullPath, depth + 1);
+                    // If we found it in a subdirectory, stop searching
+                    if (packageJsonPath) return;
+                }
+            }
+        } catch (err) {
+            console.error(`Error searching directory ${dir}: ${err}`);
         }
     }
     
@@ -77,53 +89,63 @@ function findPackageJson(directory) {
 function deployNodeApp(projectPath, socket) {
     socket.emit('deploymentStatus', `Starting deployment from: ${projectPath}`);
     
-    // Change to the project directory
-    process.chdir(projectPath);
-    
-    // Install dependencies
-    socket.emit('deploymentStatus', 'Installing dependencies...');
-    exec('npm install', (error, stdout, stderr) => {
-        if (error) {
-            socket.emit('deploymentStatus', `Deployment error: ${error.message}`);
+    try {
+        // Change to the project directory
+        process.chdir(projectPath);
+        
+        // First verify that package.json exists
+        if (!fs.existsSync(path.join(projectPath, 'package.json'))) {
+            socket.emit('deploymentStatus', `Error: package.json not found in ${projectPath}. Cannot deploy.`);
             return;
         }
         
-        if (stderr) {
-            socket.emit('deploymentStatus', `npm warning: ${stderr}`);
-        }
-        
-        socket.emit('deploymentStatus', `Dependencies installed: ${stdout}`);
-        
-        // Check if there's a start script in package.json
-        try {
-            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            
-            if (packageJson.scripts && packageJson.scripts.start) {
-                socket.emit('deploymentStatus', 'Starting application...');
-                
-                // Start the application using npm start
-                const child = spawn('npm', ['start'], { detached: true });
-                
-                child.stdout.on('data', (data) => {
-                    socket.emit('deploymentStatus', `App output: ${data.toString()}`);
-                });
-                
-                child.stderr.on('data', (data) => {
-                    socket.emit('deploymentStatus', `App error: ${data.toString()}`);
-                });
-                
-                child.on('close', (code) => {
-                    socket.emit('deploymentStatus', `Application exited with code ${code}`);
-                });
-                
-                socket.emit('deploymentStatus', 'Application deployed successfully!');
-            } else {
-                socket.emit('deploymentStatus', 'No start script found in package.json');
+        // Install dependencies
+        socket.emit('deploymentStatus', 'Installing dependencies...');
+        exec('npm install', (error, stdout, stderr) => {
+            if (error) {
+                socket.emit('deploymentStatus', `Deployment error: ${error.message}`);
+                return;
             }
-        } catch (err) {
-            socket.emit('deploymentStatus', `Error reading package.json: ${err.message}`);
-        }
-    });
+            
+            if (stderr) {
+                socket.emit('deploymentStatus', `npm warning: ${stderr}`);
+            }
+            
+            socket.emit('deploymentStatus', `Dependencies installed: ${stdout}`);
+            
+            // Check if there's a start script in package.json
+            try {
+                const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+                
+                if (packageJson.scripts && packageJson.scripts.start) {
+                    socket.emit('deploymentStatus', 'Starting application...');
+                    
+                    // Start the application using npm start
+                    const child = spawn('npm', ['start'], { detached: true });
+                    
+                    child.stdout.on('data', (data) => {
+                        socket.emit('deploymentStatus', `App output: ${data.toString()}`);
+                    });
+                    
+                    child.stderr.on('data', (data) => {
+                        socket.emit('deploymentStatus', `App error: ${data.toString()}`);
+                    });
+                    
+                    child.on('close', (code) => {
+                        socket.emit('deploymentStatus', `Application exited with code ${code}`);
+                    });
+                    
+                    socket.emit('deploymentStatus', 'Application deployed successfully!');
+                } else {
+                    socket.emit('deploymentStatus', 'No start script found in package.json');
+                }
+            } catch (err) {
+                socket.emit('deploymentStatus', `Error reading package.json: ${err.message}`);
+            }
+        });
+    } catch (err) {
+        socket.emit('deploymentStatus', `Deployment error: ${err.message}`);
+    }
 }
 
 io.on('connection', (socket) => {
@@ -136,44 +158,46 @@ io.on('connection', (socket) => {
     socket.emit('resourceUsage', getResourceUsage());
 
     socket.on('command', (command) => {
-      const child = spawn(command, { shell: true, cwd: currentDir });
+        const child = spawn(command, { shell: true, cwd: currentDir });
 
-      child.stdout.on('data', (data) => {
-        socket.emit('log', data.toString());
-      });
+        child.stdout.on('data', (data) => {
+            socket.emit('log', data.toString());
+        });
 
-      child.stderr.on('data', (data) => {
-        socket.emit('log', `ERROR: ${data.toString()}`);
-      });
+        child.stderr.on('data', (data) => {
+            socket.emit('log', `ERROR: ${data.toString()}`);
+        });
 
-      child.on('close', (code) => {
-        socket.emit('log', `Command exited with code ${code}`);
-      });
+        child.on('close', (code) => {
+            socket.emit('log', `Command exited with code ${code}`);
+        });
     });
 
     socket.on('listFiles', () => {
         // Get the list of files from current directory
         fs.readdir(currentDir, { withFileTypes: true }, (err, dirents) => {
-          if (err) {
-            socket.emit('log', `Failed to get file list ${err}`);
-            return;
-          }
-          
-          // Create array with file info including type (file or directory)
-          const files = dirents.map(dirent => {
-            return {
-              name: dirent.name,
-              isDirectory: dirent.isDirectory()
-            };
-          });
-          
-          socket.emit('fileList', files);
-          socket.emit('log', `Current directory: ${currentDir}`);
+            if (err) {
+                socket.emit('log', `Failed to get file list ${err}`);
+                return;
+            }
+            
+            // Create array with file info including type (file or directory)
+            const files = dirents.map(dirent => {
+                const fullPath = path.join(currentDir, dirent.name);
+                return {
+                    name: dirent.name,
+                    isDirectory: dirent.isDirectory(),
+                    isUserUploaded: uploadedFiles.has(fullPath) // Flag if this is a user-uploaded file
+                };
+            });
+            
+            socket.emit('fileList', files);
+            socket.emit('log', `Current directory: ${currentDir}`);
         });
     });
 
     socket.on('getMyPath', () => {
-      socket.emit('log', `Current Path: ${currentDir}`);
+        socket.emit('log', `Current Path: ${currentDir}`);
     });
 
     socket.on('changeDirectory', (dirName) => {
@@ -222,6 +246,9 @@ io.on('connection', (socket) => {
                 } else {
                     socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
                     
+                    // Mark as user uploaded
+                    uploadedFiles.add(filePath);
+                    
                     // Create a unique extraction directory to prevent conflicts
                     const extractionDir = path.join(currentDir, `extracted_${Date.now()}`);
                     fs.mkdirSync(extractionDir, { recursive: true });
@@ -232,14 +259,29 @@ io.on('connection', (socket) => {
                         zip.extractAllTo(extractionDir, true);
                         socket.emit('log', `Extracted zip file ${filename} to ${extractionDir} successfully`);
                         
+                        // Mark all extracted files as user uploaded for security
+                        markExtractedFilesAsUploaded(extractionDir);
+                        
                         // Look for package.json in the extracted directory
                         const packageJsonDir = findPackageJson(extractionDir);
                         
                         if (packageJsonDir) {
                             socket.emit('log', `Found Node.js project at: ${packageJsonDir}`);
                             
-                            // Auto deploy the application
-                            deployNodeApp(packageJsonDir, socket);
+                            try {
+                                // Verify package.json is readable before deployment
+                                const packageJsonContent = fs.readFileSync(path.join(packageJsonDir, 'package.json'), 'utf8');
+                                const packageJson = JSON.parse(packageJsonContent);
+                                
+                                if (packageJson) {
+                                    socket.emit('log', `Verified package.json in ${packageJsonDir}`);
+                                    
+                                    // Auto deploy the application
+                                    deployNodeApp(packageJsonDir, socket);
+                                }
+                            } catch (err) {
+                                socket.emit('log', `Error verifying package.json: ${err.message}`);
+                            }
                         } else {
                             socket.emit('log', 'No Node.js project found in the uploaded zip file');
                         }
@@ -264,14 +306,41 @@ io.on('connection', (socket) => {
                     socket.emit('log', `Failed to upload file: ${err}`);
                 } else {
                     socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
+                    // Mark as user uploaded
+                    uploadedFiles.add(filePath);
                     socket.emit('listFiles'); // Refresh file list after upload
                 }
             });
         }
     });
 
+    // Helper function to mark all extracted files recursively as user uploaded
+    function markExtractedFilesAsUploaded(directory) {
+        try {
+            const entries = fs.readdirSync(directory, { withFileTypes: true });
+            
+            for (const entry of entries) {
+                const fullPath = path.join(directory, entry.name);
+                uploadedFiles.add(fullPath);
+                
+                if (entry.isDirectory()) {
+                    markExtractedFilesAsUploaded(fullPath);
+                }
+            }
+        } catch (err) {
+            console.error(`Error marking extracted files: ${err}`);
+        }
+    }
+
     socket.on('deleteFile', (filename) => {
         const filePath = path.join(currentDir, filename);
+        
+        // Security check: Only allow deletion of user-uploaded files
+        if (!uploadedFiles.has(filePath)) {
+            socket.emit('log', `Cannot delete ${filename}: Only user-uploaded files can be deleted.`);
+            return;
+        }
+        
         fs.stat(filePath, (err, stats) => {
             if (err) {
                 socket.emit('log', `Failed to get file stats: ${err}`);
@@ -285,6 +354,10 @@ io.on('connection', (socket) => {
                         socket.emit('log', `Failed to delete directory: ${err}`);
                     } else {
                         socket.emit('log', `Directory ${filename} deleted successfully from ${filePath}`);
+                        
+                        // Remove the directory and its contents from uploadedFiles
+                        removeFromUploadedFiles(filePath);
+                        
                         socket.emit('listFiles'); // Refresh file list
                     }
                 });
@@ -295,6 +368,7 @@ io.on('connection', (socket) => {
                         socket.emit('log', `Failed to delete file: ${err}`);
                     } else {
                         socket.emit('log', `File ${filename} deleted successfully from ${filePath}`);
+                        uploadedFiles.delete(filePath);
                         socket.emit('listFiles'); // Refresh file list
                     }
                 });
@@ -302,8 +376,21 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Helper function to remove directory and its contents from uploadedFiles
+    function removeFromUploadedFiles(directory) {
+        uploadedFiles.delete(directory);
+        
+        // Remove all files that start with this directory path
+        for (const file of uploadedFiles) {
+            if (file.startsWith(directory + path.sep)) {
+                uploadedFiles.delete(file);
+            }
+        }
+    }
+
     socket.on('viewFile', (filename) => {
         const filePath = path.join(currentDir, filename);
+        
         fs.stat(filePath, (err, stats) => {
             if (err) {
                 socket.emit('log', `Failed to get file stats: ${err}`);
@@ -316,6 +403,12 @@ io.on('connection', (socket) => {
                 socket.emit('log', `Changed to directory: ${currentDir}`);
                 socket.emit('listFiles');
             } else {
+                // Security check: Only allow viewing user-uploaded files
+                if (!uploadedFiles.has(filePath)) {
+                    socket.emit('log', `Cannot view ${filename}: Only user-uploaded files can be viewed.`);
+                    return;
+                }
+                
                 fs.readFile(filePath, 'utf8', (err, data) => {
                     if (err) {
                         socket.emit('log', `Failed to view file: ${err}`);
@@ -336,6 +429,8 @@ io.on('connection', (socket) => {
                 socket.emit('log', `Failed to create folder: ${err}`);
             } else {
                 socket.emit('log', `Folder ${folderName} created successfully at ${folderPath}`);
+                // Mark the folder as user created
+                uploadedFiles.add(folderPath);
                 socket.emit('listFiles'); // Refresh file list
             }
         });
@@ -350,6 +445,8 @@ io.on('connection', (socket) => {
                 socket.emit('log', `Failed to create file: ${err}`);
             } else {
                 socket.emit('log', `File ${filename} created successfully at ${filePath}`);
+                // Mark as user created
+                uploadedFiles.add(filePath);
                 socket.emit('listFiles'); // Refresh file list
             }
         });
