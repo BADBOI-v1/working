@@ -1,12 +1,10 @@
+
 const express = require('express');
 const { spawn } = require('child_process');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const socketIO = require('socket.io');
-
-// Import the Telegram bot from the separate file
-const telegramBot = require('./telegramBot');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -42,10 +40,6 @@ function formatUptime(seconds) {
     return `${hours}h ${minutes}m`;
 }
 
-// Telegram bot functionality is now in the separate telegramBot.js file
-console.log('Web server started with Telegram bot integration.');
-
-// Socket.io Implementation (Existing Code)
 io.on('connection', (socket) => {
     console.log('Client connected');
 
