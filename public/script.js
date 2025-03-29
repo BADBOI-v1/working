@@ -37,6 +37,12 @@ myPathButton.addEventListener('click', () => {
     logDisplay.classList.remove('hidden'); // Show the log display when path is requested
 });
 
+// New button for directory navigation
+document.getElementById('back-dir-button').addEventListener('click', () => {
+    socket.emit('changeDirectory', '..');
+    logDisplay.classList.remove('hidden');
+});
+
 stopButton.addEventListener('click', () => {
     socket.emit('stopServer');
     logDisplay.classList.remove('hidden'); // Show the log display when server is stopped
@@ -88,6 +94,15 @@ viewButton.addEventListener('click', () => {
         logDisplay.classList.remove('hidden'); //Show Log
     } else {
         alert('Please select a file to view.');
+    }
+});
+
+// Add double-click event for directory navigation or file viewing
+fileListSelect.addEventListener('dblclick', () => {
+    const filename = fileListSelect.value;
+    if (filename) {
+        socket.emit('viewFile', filename); // This will handle both files and directories
+        logDisplay.classList.remove('hidden');
     }
 });
 
