@@ -9,7 +9,15 @@ const AdmZip = require('adm-zip');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Create a permanent storage directory
+const storageDir = path.join(__dirname, 'storage');
+if (!fs.existsSync(storageDir)) {
+    fs.mkdirSync(storageDir, { recursive: true });
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
+// Also serve files from storage directory
+app.use('/storage', express.static(path.join(__dirname, 'storage')));
 
 const server = app.listen(port, () => {
     console.log(`Server running on port ${port}`);
@@ -120,12 +128,15 @@ function deployNodeApp(projectPath, socket) {
 
 io.on('connection', (socket) => {
     console.log('Client connected');
+    
+    // Keep track of current working directory
+    let currentDir = storageDir;
 
     // Send initial resource usage
     socket.emit('resourceUsage', getResourceUsage());
 
     socket.on('command', (command) => {
-      const child = spawn(command, { shell: true });
+      const child = spawn(command, { shell: true, cwd: currentDir });
 
       child.stdout.on('data', (data) => {
         socket.emit('log', data.toString());
@@ -141,9 +152,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('listFiles', () => {
-        //Get the list of files.
-        const filePath = process.cwd();
-        fs.readdir(filePath, { withFileTypes: true }, (err, dirents) => {
+        // Get the list of files from current directory
+        fs.readdir(currentDir, { withFileTypes: true }, (err, dirents) => {
           if (err) {
             socket.emit('log', `Failed to get file list ${err}`);
             return;
@@ -158,12 +168,41 @@ io.on('connection', (socket) => {
           });
           
           socket.emit('fileList', files);
+          socket.emit('log', `Current directory: ${currentDir}`);
         });
     });
 
     socket.on('getMyPath', () => {
-      const filePath = process.cwd();
-      socket.emit('log', `Current Path: ${filePath}`);
+      socket.emit('log', `Current Path: ${currentDir}`);
+    });
+
+    socket.on('changeDirectory', (dirName) => {
+        // Handle .. for going up a directory
+        if (dirName === '..') {
+            const parentDir = path.dirname(currentDir);
+            // Don't allow navigating outside storage directory
+            if (parentDir.startsWith(storageDir) || parentDir === path.dirname(storageDir)) {
+                currentDir = parentDir;
+                socket.emit('log', `Changed to directory: ${currentDir}`);
+                socket.emit('listFiles');
+            } else {
+                socket.emit('log', `Cannot navigate outside storage directory`);
+            }
+            return;
+        }
+        
+        // Check if directory exists and change to it
+        const newDir = path.join(currentDir, dirName);
+        fs.stat(newDir, (err, stats) => {
+            if (err || !stats.isDirectory()) {
+                socket.emit('log', `Not a valid directory: ${dirName}`);
+                return;
+            }
+            
+            currentDir = newDir;
+            socket.emit('log', `Changed to directory: ${currentDir}`);
+            socket.emit('listFiles');
+        });
     });
 
     socket.on('stopServer', () => {
@@ -171,25 +210,25 @@ io.on('connection', (socket) => {
     });
 
     socket.on('uploadFile', (data) => {
-        //Write content to disk.
         const { filename, content } = data;
+        const filePath = path.join(currentDir, filename);
         
         // Check if it's a zip file
         if (filename.toLowerCase().endsWith('.zip')) {
             // Save the zip file first
-            fs.writeFile(filename, Buffer.from(content.split(',')[1], 'base64'), (err) => {
+            fs.writeFile(filePath, Buffer.from(content.split(',')[1], 'base64'), (err) => {
                 if (err) {
                     socket.emit('log', `Failed to upload zip file: ${err}`);
                 } else {
-                    socket.emit('log', `File ${filename} uploaded successfully`);
+                    socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
                     
                     // Create a unique extraction directory to prevent conflicts
-                    const extractionDir = `extracted_${Date.now()}`;
+                    const extractionDir = path.join(currentDir, `extracted_${Date.now()}`);
                     fs.mkdirSync(extractionDir, { recursive: true });
                     
                     // Extract the zip file
                     try {
-                        const zip = new AdmZip(filename);
+                        const zip = new AdmZip(filePath);
                         zip.extractAllTo(extractionDir, true);
                         socket.emit('log', `Extracted zip file ${filename} to ${extractionDir} successfully`);
                         
@@ -220,11 +259,11 @@ io.on('connection', (socket) => {
                 fileContent = Buffer.from(base64Data, 'base64');
             }
             
-            fs.writeFile(filename, fileContent, (err) => {
+            fs.writeFile(filePath, fileContent, (err) => {
                 if (err) {
                     socket.emit('log', `Failed to upload file: ${err}`);
                 } else {
-                    socket.emit('log', `File ${filename} uploaded successfully`);
+                    socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
                     socket.emit('listFiles'); // Refresh file list after upload
                 }
             });
@@ -232,8 +271,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('deleteFile', (filename) => {
-        //Delete from disk
-        fs.stat(filename, (err, stats) => {
+        const filePath = path.join(currentDir, filename);
+        fs.stat(filePath, (err, stats) => {
             if (err) {
                 socket.emit('log', `Failed to get file stats: ${err}`);
                 return;
@@ -241,21 +280,21 @@ io.on('connection', (socket) => {
             
             if (stats.isDirectory()) {
                 // Remove directory and its contents
-                fs.rm(filename, { recursive: true }, (err) => {
+                fs.rm(filePath, { recursive: true }, (err) => {
                     if (err) {
                         socket.emit('log', `Failed to delete directory: ${err}`);
                     } else {
-                        socket.emit('log', `Directory ${filename} deleted successfully`);
+                        socket.emit('log', `Directory ${filename} deleted successfully from ${filePath}`);
                         socket.emit('listFiles'); // Refresh file list
                     }
                 });
             } else {
                 // Remove file
-                fs.unlink(filename, (err) => {
+                fs.unlink(filePath, (err) => {
                     if (err) {
                         socket.emit('log', `Failed to delete file: ${err}`);
                     } else {
-                        socket.emit('log', `File ${filename} deleted successfully`);
+                        socket.emit('log', `File ${filename} deleted successfully from ${filePath}`);
                         socket.emit('listFiles'); // Refresh file list
                     }
                 });
@@ -264,21 +303,25 @@ io.on('connection', (socket) => {
     });
 
     socket.on('viewFile', (filename) => {
-        //Read Content and send to client.
-        fs.stat(filename, (err, stats) => {
+        const filePath = path.join(currentDir, filename);
+        fs.stat(filePath, (err, stats) => {
             if (err) {
                 socket.emit('log', `Failed to get file stats: ${err}`);
                 return;
             }
             
             if (stats.isDirectory()) {
-                socket.emit('log', `Cannot view content of directory ${filename}`);
+                // Change directory if it's a directory
+                currentDir = filePath;
+                socket.emit('log', `Changed to directory: ${currentDir}`);
+                socket.emit('listFiles');
             } else {
-                fs.readFile(filename, 'utf8', (err, data) => {
+                fs.readFile(filePath, 'utf8', (err, data) => {
                     if (err) {
                         socket.emit('log', `Failed to view file: ${err}`);
                     } else {
                         socket.emit('fileContent', data);
+                        socket.emit('log', `Viewing file: ${filePath}`);
                     }
                 });
             }
@@ -287,11 +330,12 @@ io.on('connection', (socket) => {
 
     // New event handler for creating a new folder
     socket.on('createFolder', (folderName) => {
-        fs.mkdir(folderName, (err) => {
+        const folderPath = path.join(currentDir, folderName);
+        fs.mkdir(folderPath, { recursive: true }, (err) => {
             if (err) {
                 socket.emit('log', `Failed to create folder: ${err}`);
             } else {
-                socket.emit('log', `Folder ${folderName} created successfully`);
+                socket.emit('log', `Folder ${folderName} created successfully at ${folderPath}`);
                 socket.emit('listFiles'); // Refresh file list
             }
         });
@@ -300,11 +344,12 @@ io.on('connection', (socket) => {
     // New event handler for creating a new file
     socket.on('createFile', (data) => {
         const { filename, content } = data;
-        fs.writeFile(filename, content || '', (err) => {
+        const filePath = path.join(currentDir, filename);
+        fs.writeFile(filePath, content || '', (err) => {
             if (err) {
                 socket.emit('log', `Failed to create file: ${err}`);
             } else {
-                socket.emit('log', `File ${filename} created successfully`);
+                socket.emit('log', `File ${filename} created successfully at ${filePath}`);
                 socket.emit('listFiles'); // Refresh file list
             }
         });
