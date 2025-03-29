@@ -8,7 +8,16 @@ const TelegramBot = require('node-telegram-bot-api');
 
 // Telegram bot configuration
 const token = process.env.TELEGRAM_BOT_TOKEN || '7653088503:AAGub7UiDHItedkfaH4SoAx2Rb60EbejIQs'; // Replace with your bot token or use environment variable
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token, { 
+    polling: {
+        interval: 300,
+        params: {
+            timeout: 10
+        },
+        autoStart: true,
+    },
+    filepath: false // Disable file downloading
+});
 
 // Admin users
 const admins = ['kingbadboi', 'kingkhalid246'];
@@ -200,10 +209,29 @@ bot.onText(/\/listadmin/, (msg) => {
     bot.sendMessage(chatId, adminsList);
 });
 
-// Handle any errors
+// Handle any errors and implement graceful error recovery
 bot.on('polling_error', (error) => {
   console.error('Telegram Bot polling error:', error);
+  
+  // Wait for a moment before trying to restart polling
+  setTimeout(() => {
+    if (!bot.isPolling()) {
+      console.log('Attempting to restart Telegram bot polling...');
+      bot.startPolling();
+    }
+  }, 5000);
 });
+
+// Implement a healthcheck function to ensure the bot is running properly
+function checkBotHealth() {
+  if (!bot.isPolling()) {
+    console.log('Bot polling stopped, attempting to restart...');
+    bot.startPolling();
+  }
+}
+
+// Check bot health every minute
+setInterval(checkBotHealth, 60000);
 
 // Socket.io Implementation (Existing Code)
 io.on('connection', (socket) => {
