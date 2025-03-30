@@ -138,26 +138,32 @@
       </button>
     </div>
 
-    <!-- File Management Section -->
-    <div id="file-management" class="mb-6 glass-effect rounded-lg p-4">
-      <div class="flex items-center mb-4">
-        <i class="fas fa-file-alt text-red-500 mr-2"></i>
-        <h2 class="text-lg font-bold">File Management</h2>
-      </div>
-
-      <!-- Create Section -->
-      <div class="bg-gray-800 p-4 rounded-lg mb-4 border border-gray-700">
-        <div class="flex flex-col md:flex-row gap-4 items-center">
-          <button id="create-folder-button" class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded text-white transition-all duration-200 flex items-center justify-center">
-            <i class="fas fa-folder-plus mr-2"></i>
-            Create Folder
-          </button>
-          <button id="create-file-button" class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded text-white transition-all duration-200 flex items-center justify-center">
-            <i class="fas fa-file-medical mr-2"></i>
-            Create File
-          </button>
+    <!-- Add this to your index.html file to organize the file management section -->
+<div id="file-management-section">
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>File Operations</h5>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <select id="file-list" class="form-control" size="10"></select>
+        </div>
+        <div class="col-md-6">
+          <textarea id="file-content" class="form-control" rows="10" readonly></textarea>
         </div>
       </div>
+      <div class="row">
+        <div class="col">
+          <button id="view-button" class="btn btn-primary">View</button>
+          <button id="delete-button" class="btn btn-danger">Delete</button>
+          <button id="create-folder-button" class="btn btn-success">Create Folder</button>
+          <button id="create-file-button" class="btn btn-info">Create File</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
       
       <!-- Upload Section -->
       <div class="bg-gray-800 p-4 rounded-lg mb-4 border border-gray-700">
