@@ -36,86 +36,103 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(220, 38, 38, 0.3);
         }
+        /* Custom container width */
+        .container-wide {
+            width: 95%;
+            max-width: 1920px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Increased height for elements */
+        .h-increased {
+            height: 60px;
+        }
+        .textarea-increased {
+            height: 220px;
+        }
+        .log-increased {
+            height: 300px;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-black text-white font-sans min-h-screen">
-  <div class="container mx-auto p-4 md:p-6">
+  <div class="container-wide p-4 md:p-6">
     <!-- Header -->
-    <header class="flex justify-between items-center mb-6 glass-effect rounded-lg p-4">
+    <header class="flex justify-between items-center mb-6 glass-effect rounded-lg p-6">
       <div class="flex items-center">
-        <i class="fas fa-server text-red-500 text-3xl mr-3"></i>
-        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-500">Command Center</h1>
+        <i class="fas fa-server text-red-500 text-4xl mr-3"></i>
+        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-500">Command Center</h1>
       </div>
-      <div class="text-sm text-gray-400">
+      <div class="text-lg text-gray-400">
         <span id="server-status" class="inline-flex items-center">
-          <span class="h-2 w-2 rounded-full bg-green-500 mr-2 pulse-alert"></span>
+          <span class="h-3 w-3 rounded-full bg-green-500 mr-2 pulse-alert"></span>
           System Active
         </span>
       </div>
     </header>
 
     <!-- Command Section -->
-    <div class="mb-6 glass-effect rounded-lg p-4">
-      <div class="flex items-center mb-2">
-        <i class="fas fa-terminal text-red-500 mr-2"></i>
-        <h2 class="text-lg font-bold">Command Terminal</h2>
+    <div class="mb-8 glass-effect rounded-lg p-6">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-terminal text-red-500 mr-2 text-xl"></i>
+        <h2 class="text-xl font-bold">Command Terminal</h2>
       </div>
       <div class="flex">
         <input type="text" id="command-input" placeholder="Enter command..." 
-          class="w-full p-3 bg-gray-800 border-2 border-red-500 rounded-l text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
+          class="w-full p-4 h-increased bg-gray-800 border-2 border-red-500 rounded-l text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
         <button id="send-button" 
-          class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-r text-white flex items-center transition-all duration-200 transform hover:scale-105">
+          class="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-r text-white flex items-center transition-all duration-200 transform hover:scale-105 h-increased">
           <i class="fas fa-paper-plane mr-2"></i> Send
         </button>
       </div>
     </div>
 
     <!-- Resource Usage -->
-    <div class="mb-6">
-      <div class="flex items-center mb-2">
-        <i class="fas fa-chart-line text-red-500 mr-2"></i>
-        <h2 class="text-lg font-bold">System Resources</h2>
+    <div class="mb-8">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-chart-line text-red-500 mr-2 text-xl"></i>
+        <h2 class="text-xl font-bold">System Resources</h2>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="glass-effect p-4 rounded-lg flex flex-col">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-gray-400">CPU</span>
-            <i class="fas fa-microchip text-red-500"></i>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="glass-effect p-6 rounded-lg flex flex-col">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-gray-400 text-lg">CPU</span>
+            <i class="fas fa-microchip text-red-500 text-xl"></i>
           </div>
-          <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-            <div class="bg-red-500 h-2.5 rounded-full" style="width: 45%"></div>
+          <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
+            <div class="bg-red-500 h-3 rounded-full" style="width: 45%"></div>
           </div>
-          <span id="cpu-usage" class="text-xl font-bold">45%</span>
+          <span id="cpu-usage" class="text-2xl font-bold">45%</span>
         </div>
         
-        <div class="glass-effect p-4 rounded-lg flex flex-col">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-gray-400">RAM</span>
-            <i class="fas fa-memory text-red-500"></i>
+        <div class="glass-effect p-6 rounded-lg flex flex-col">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-gray-400 text-lg">RAM</span>
+            <i class="fas fa-memory text-red-500 text-xl"></i>
           </div>
-          <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-            <div class="bg-red-500 h-2.5 rounded-full" style="width: 60%"></div>
+          <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
+            <div class="bg-red-500 h-3 rounded-full" style="width: 60%"></div>
           </div>
-          <span id="ram-usage" class="text-xl font-bold">3.6GB</span>
+          <span id="ram-usage" class="text-2xl font-bold">3.6GB</span>
         </div>
         
-        <div class="glass-effect p-4 rounded-lg flex flex-col">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-gray-400">Disk</span>
-            <i class="fas fa-hdd text-red-500"></i>
+        <div class="glass-effect p-6 rounded-lg flex flex-col">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-gray-400 text-lg">Disk</span>
+            <i class="fas fa-hdd text-red-500 text-xl"></i>
           </div>
-          <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-            <div class="bg-red-500 h-2.5 rounded-full" style="width: 30%"></div>
+          <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
+            <div class="bg-red-500 h-3 rounded-full" style="width: 30%"></div>
           </div>
-          <span id="disk-usage" class="text-xl font-bold">120GB</span>
+          <span id="disk-usage" class="text-2xl font-bold">120GB</span>
         </div>
         
-        <div class="glass-effect p-4 rounded-lg flex flex-col">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-gray-400">Uptime</span>
-            <i class="fas fa-clock text-red-500"></i>
+        <div class="glass-effect p-6 rounded-lg flex flex-col">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-gray-400 text-lg">Uptime</span>
+            <i class="fas fa-clock text-red-500 text-xl"></i>
           </div>
-          <div class="text-xl font-bold flex items-center justify-center h-8">
+          <div class="text-2xl font-bold flex items-center justify-center h-10">
             <span id="uptime">12h 34m</span>
           </div>
         </div>
@@ -123,144 +140,120 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      <button id="files-button" class="glass-effect p-4 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
-        <i class="fas fa-folder text-2xl text-red-500 mb-2"></i>
-        <span>Files</span>
+    <div class="grid grid-cols-3 gap-6 mb-8">
+      <button id="files-button" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
+        <i class="fas fa-folder text-3xl text-red-500 mb-3"></i>
+        <span class="text-lg">Files</span>
       </button>
-      <button id="my-path-button" class="glass-effect p-4 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
-        <i class="fas fa-map-marker-alt text-2xl text-red-500 mb-2"></i>
-        <span>My Path</span>
+      <button id="my-path-button" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
+        <i class="fas fa-map-marker-alt text-3xl text-red-500 mb-3"></i>
+        <span class="text-lg">My Path</span>
       </button>
-      <button id="stop-button" class="glass-effect p-4 rounded-lg hover:bg-red-900 transition-all duration-200 text-center flex flex-col items-center justify-center">
-        <i class="fas fa-stop-circle text-2xl text-red-500 mb-2"></i>
-        <span>Stop</span>
+      <button id="stop-button" class="glass-effect p-6 rounded-lg hover:bg-red-900 transition-all duration-200 text-center flex flex-col items-center justify-center">
+        <i class="fas fa-stop-circle text-3xl text-red-500 mb-3"></i>
+        <span class="text-lg">Stop</span>
       </button>
     </div>
 
     <!-- File Management Section -->
-    <div class="mb-6">
-      <div class="flex items-center mb-2">
-        <i class="fas fa-file-alt text-red-500 mr-2"></i>
-        <h2 class="text-lg font-bold">File Management</h2>
+    <div id="file-management" class="mb-8 glass-effect rounded-lg p-6">
+      <div class="flex items-center mb-6">
+        <i class="fas fa-file-alt text-red-500 mr-2 text-xl"></i>
+        <h2 class="text-xl font-bold">File Management</h2>
+      </div>
+
+      <!-- Create Section -->
+      <div class="bg-gray-800 p-6 rounded-lg mb-6 border border-gray-700">
+        <div class="flex flex-col md:flex-row gap-6 items-center">
+          <button id="create-folder-button" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded text-white transition-all duration-200 flex items-center justify-center text-lg">
+            <i class="fas fa-folder-plus mr-2"></i>
+            Create Folder
+          </button>
+          <button id="create-file-button" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded text-white transition-all duration-200 flex items-center justify-center text-lg">
+            <i class="fas fa-file-medical mr-2"></i>
+            Create File
+          </button>
+        </div>
       </div>
       
       <!-- Upload Section -->
-      <div class="glass-effect p-4 rounded-lg mb-4">
-        <h3 class="text-md font-bold mb-2 text-gray-300">Upload Files</h3>
-        <div class="flex flex-col md:flex-row gap-4 items-center">
+      <div class="bg-gray-800 p-6 rounded-lg mb-6 border border-gray-700">
+        <div class="flex flex-col md:flex-row gap-6 items-center">
           <div class="relative w-full">
             <input type="file" id="file-upload" class="hidden">
-            <label for="file-upload" class="cursor-pointer w-full flex items-center justify-center p-2 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors">
+            <label for="file-upload" class="cursor-pointer w-full flex items-center justify-center p-3 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors text-lg">
               <i class="fas fa-cloud-upload-alt mr-2"></i>
               <span>Choose File</span>
             </label>
-            <span id="file-name" class="mt-2 text-sm text-gray-400 block">No file chosen</span>
+            <span id="file-name" class="mt-2 text-base text-gray-400 block">No file chosen</span>
           </div>
-          <button id="upload-button" class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded text-white transition-all duration-200 flex items-center justify-center">
+          <button id="upload-button" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded text-white transition-all duration-200 flex items-center justify-center text-lg">
             <i class="fas fa-upload mr-2"></i>
             Upload
           </button>
         </div>
-        <div class="mt-2 text-xs text-gray-400">
+        <div class="mt-3 text-sm text-gray-400">
           <p>Supports any file type including ZIP archives (will be automatically extracted)</p>
         </div>
       </div>
 
-      <!-- File Browser -->
-      <div class="glass-effect p-4 rounded-lg mb-4">
-        <h3 class="text-md font-bold mb-2 text-gray-300">File Browser</h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- File List Column -->
-          <div>
-            <div class="bg-gray-800 border border-gray-700 rounded h-60 overflow-y-auto p-2">
-              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
-                <i class="fas fa-folder text-yellow-500 mr-2"></i>
-                <span>config</span>
-              </div>
-              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
-                <i class="fas fa-folder text-yellow-500 mr-2"></i>
-                <span>public</span>
-              </div>
-              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
-                <i class="fas fa-file-code text-blue-400 mr-2"></i>
-                <span>server.js</span>
-              </div>
-              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
-                <i class="fas fa-file text-gray-400 mr-2"></i>
-                <span>README.md</span>
-              </div>
-              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
-                <i class="fas fa-file-alt text-gray-400 mr-2"></i>
-                <span>package.json</span>
-              </div>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="flex mt-2 space-x-2">
-              <button class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm flex-1 flex items-center justify-center">
-                <i class="fas fa-folder-plus mr-1"></i> New Folder
-              </button>
-              <button class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm flex-1 flex items-center justify-center">
-                <i class="fas fa-file-medical mr-1"></i> New File
-              </button>
-              <button class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-white text-sm flex-1 flex items-center justify-center">
-                <i class="fas fa-trash-alt mr-1"></i> Delete
-              </button>
-            </div>
+      <!-- File Management Area -->
+      <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+        <div class="relative mb-6">
+          <select id="file-list" class="w-full p-4 bg-gray-700 border-2 border-red-500 rounded text-white appearance-none h-increased">
+            <option value="">-- Select a file or folder --</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-red-500">
+            <i class="fas fa-chevron-down"></i>
           </div>
-          
-          <!-- File Content Column -->
-          <div>
-            <div class="relative">
-              <textarea id="file-content" class="w-full h-60 p-3 bg-gray-800 border border-gray-700 rounded text-white font-mono text-sm resize-none" readonly>// Select a file to view its contents</textarea>
-              <div class="absolute top-2 right-2 flex space-x-1">
-                <button id="edit-button" class="p-1 bg-blue-600 rounded text-white hover:bg-blue-500 transition-colors">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button id="copy-button" class="p-1 bg-gray-600 rounded text-white hover:bg-gray-500 transition-colors">
-                  <i class="fas fa-copy"></i>
-                </button>
-                <button id="save-button" class="p-1 bg-green-600 rounded text-white hover:bg-green-500 transition-colors hidden">
-                  <i class="fas fa-save"></i>
-                </button>
-              </div>
-            </div>
-            
-            <!-- File Info -->
-            <div class="mt-2 text-xs text-gray-400 flex justify-between">
-              <span>Size: <span id="file-size">0 KB</span></span>
-              <span>Last modified: <span id="file-modified">N/A</span></span>
-            </div>
+        </div>
+
+        <div class="flex justify-between mb-6">
+          <button id="delete-button" class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded text-white transition-all duration-200 flex items-center text-lg">
+            <i class="fas fa-trash-alt mr-2"></i>
+            Delete
+          </button>
+          <button id="view-button" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded text-white transition-all duration-200 flex items-center text-lg">
+            <i class="fas fa-eye mr-2"></i>
+            View Content
+          </button>
+        </div>
+        
+        <div class="relative">
+          <textarea id="file-content" class="w-full textarea-increased p-4 bg-gray-700 border-2 border-red-500 rounded text-white" readonly>// File content will appear here when you select a file and click "View Content"</textarea>
+          <div class="absolute top-3 right-3 flex">
+            <button id="copy-button" class="p-2 bg-gray-600 rounded text-white hover:bg-gray-500 transition-colors">
+              <i class="fas fa-copy"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Log Display -->
-    <div class="mb-6">
-      <div class="flex items-center mb-2">
-        <i class="fas fa-list-alt text-red-500 mr-2"></i>
-        <h2 class="text-lg font-bold">System Logs</h2>
+    <div class="mb-8">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-list-alt text-red-500 mr-2 text-xl"></i>
+        <h2 class="text-xl font-bold">System Logs</h2>
       </div>
-      <div id="log-display" class="p-4 glass-effect rounded-lg text-green-400 font-mono text-sm h-48 overflow-y-auto">
-        <div class="mb-1">[INFO] <span class="text-gray-400">2025-03-29 08:15:22</span> System initialized</div>
-        <div class="mb-1">[INFO] <span class="text-gray-400">2025-03-29 08:15:23</span> Web server started on port 8080</div>
-        <div class="mb-1">[INFO] <span class="text-gray-400">2025-03-29 08:16:05</span> User authentication successful</div>
-        <div class="mb-1">[WARN] <span class="text-gray-400">2025-03-29 08:17:12</span> <span class="text-yellow-400">High CPU usage detected (82%)</span></div>
-        <div class="mb-1">[INFO] <span class="text-gray-400">2025-03-29 08:17:45</span> Resource usage normalized</div>
-        <div class="mb-1">[INFO] <span class="text-gray-400">2025-03-29 08:20:30</span> File 'config.json' updated</div>
+      <div id="log-display" class="p-6 glass-effect rounded-lg text-green-400 font-mono text-base log-increased overflow-y-auto">
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:15:22</span> System initialized</div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:15:23</span> Web server started on port 8080</div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:16:05</span> User authentication successful</div>
+        <div class="mb-2">[WARN] <span class="text-gray-400">2025-03-29 08:17:12</span> <span class="text-yellow-400">High CPU usage detected (82%)</span></div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:17:45</span> Resource usage normalized</div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:20:30</span> File 'config.json' updated</div>
       </div>
     </div>
 
   </div>
 
-  <footer class="text-center p-4 text-gray-500 text-sm">
+  <footer class="text-center p-6 text-gray-500 text-base">
     <p>© 2025 Command Center | Server Version 3.7.2</p>
   </footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
   <script>
     // Demo functionality for the UI preview
     document.getElementById('file-upload').addEventListener('change', function(e) {
@@ -276,32 +269,6 @@
       // Notification
       const notification = document.createElement('div');
       notification.textContent = 'Copied to clipboard!';
-      notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg';
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.remove();
-      }, 2000);
-    });
-
-    // Edit functionality
-    document.getElementById('edit-button').addEventListener('click', function() {
-      const textarea = document.getElementById('file-content');
-      textarea.readOnly = false;
-      textarea.focus();
-      this.classList.add('hidden');
-      document.getElementById('save-button').classList.remove('hidden');
-    });
-
-    document.getElementById('save-button').addEventListener('click', function() {
-      const textarea = document.getElementById('file-content');
-      textarea.readOnly = true;
-      this.classList.add('hidden');
-      document.getElementById('edit-button').classList.remove('hidden');
-      
-      // Notification
-      const notification = document.createElement('div');
-      notification.textContent = 'File saved successfully!';
       notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg';
       document.body.appendChild(notification);
       
@@ -327,40 +294,12 @@
         const now = new Date();
         const timeString = now.toISOString().replace('T', ' ').substring(0, 19);
         const logEntry = document.createElement('div');
-        logEntry.className = 'mb-1';
+        logEntry.className = 'mb-2';
         logEntry.innerHTML = `[INFO] <span class="text-gray-400">${timeString}</span> System check performed`;
         logDisplay.appendChild(logEntry);
         logDisplay.scrollTop = logDisplay.scrollHeight;
       }
     }, 3000);
-
-    // File browser functionality
-    document.querySelectorAll('.bg-gray-800.border.border-gray-700.rounded.h-60 > div').forEach(item => {
-      item.addEventListener('click', function() {
-        // Highlighting the selected item
-        document.querySelectorAll('.bg-gray-800.border.border-gray-700.rounded.h-60 > div').forEach(el => {
-          el.classList.remove('bg-gray-700');
-        });
-        this.classList.add('bg-gray-700');
-        
-        // Show file content if it's a file
-        const isFolder = this.querySelector('i').classList.contains('fa-folder');
-        if (!isFolder) {
-          const fileName = this.querySelector('span').textContent;
-          document.getElementById('file-content').value = `// Content of ${fileName}\n\n` + 
-            (fileName.endsWith('.js') ? 
-              '// Sample JavaScript code\nconst express = require("express");\nconst app = express();\n\napp.get("/", (req, res) => {\n  res.send("Hello World!");\n});\n\napp.listen(3000, () => {\n  console.log("Server running on port 3000");\n});' : 
-              fileName.endsWith('.json') ? 
-              '{\n  "name": "server-app",\n  "version": "1.0.0",\n  "description": "Server application",\n  "main": "server.js",\n  "scripts": {\n    "start": "node server.js"\n  },\n  "dependencies": {\n    "express": "^4.17.1"\n  }\n}' : 
-              '# Server Application\n\nThis is a sample README file for the server application.\n\n## Installation\n\n```\nnpm install\n```\n\n## Usage\n\n```\nnpm start\n```');
-          
-          // Update file info
-          document.getElementById('file-size').textContent = Math.floor(Math.random() * 100) + ' KB';
-          const date = new Date();
-          document.getElementById('file-modified').textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-        }
-      });
-    });
   </script>
 </body>
-    </html>
+</html>
