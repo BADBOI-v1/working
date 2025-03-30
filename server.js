@@ -266,27 +266,23 @@ io.on('connection', (socket) => {
       });
     });
 
-    socket.on('listFiles', (directory = null) => {
-        //Get the list of files.
-        const filePath = directory || process.cwd();
-        fs.readdir(filePath, { withFileTypes: true }, (err, dirents) => {
-          if (err) {
-            socket.emit('log', `Failed to get file list ${err}`);
+    socket.on('listFiles', (directory = UPLOADS_DIR) => {
+    fs.readdir(directory, { withFileTypes: true }, (err, dirents) => {
+        if (err) {
+            socket.emit('log', `Error: Failed to list files in ${directory}: ${err.message}`);
             return;
-          }
-          
-          // Create array with file info including type (file or directory)
-          const files = dirents.map(dirent => {
-            return {
-              name: dirent.name,
-              isDirectory: dirent.isDirectory(),
-              path: path.join(filePath, dirent.name)
-            };
-          });
-          
-          socket.emit('fileList', { files, currentPath: filePath });
-        });
+        }
+
+        const files = dirents.map(dirent => ({
+            name: dirent.name,
+            isDirectory: dirent.isDirectory(),
+            path: path.join(directory, dirent.name) // Send full path
+        }));
+
+        socket.emit('fileList', { files, currentPath: directory });
     });
+});
+
 
     socket.on('getMyPath', () => {
       const filePath = process.cwd();
