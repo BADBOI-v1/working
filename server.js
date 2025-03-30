@@ -85,17 +85,20 @@ function findPackageJson(directory) {
     return packageJsonPath;
 }
 
-// Function to deploy a Node.js application
-function deployNodeApp(projectPath, socket) {
+ function deployNodeApp(projectPath, socket) {
     socket.emit('deploymentStatus', `Starting deployment from: ${projectPath}`);
     
     try {
+        // Save the original directory
+        const originalDir = process.cwd();
+        
         // Change to the project directory
         process.chdir(projectPath);
         
         // First verify that package.json exists
         if (!fs.existsSync(path.join(projectPath, 'package.json'))) {
             socket.emit('deploymentStatus', `Error: package.json not found in ${projectPath}. Cannot deploy.`);
+            process.chdir(originalDir); // Return to original directory
             return;
         }
         
@@ -104,6 +107,7 @@ function deployNodeApp(projectPath, socket) {
         exec('npm install', (error, stdout, stderr) => {
             if (error) {
                 socket.emit('deploymentStatus', `Deployment error: ${error.message}`);
+                process.chdir(originalDir); // Return to original directory
                 return;
             }
             
@@ -120,8 +124,15 @@ function deployNodeApp(projectPath, socket) {
                 if (packageJson.scripts && packageJson.scripts.start) {
                     socket.emit('deploymentStatus', 'Starting application...');
                     
-                    // Start the application using npm start
-                    const child = spawn('npm', ['start'], { detached: true });
+                    // Get the actual start command from package.json
+                    let startCommand = packageJson.scripts.start;
+                    
+                    // Start the application using the direct command instead of npm start
+                    // This prevents it from running the parent server.js
+                    const child = spawn('sh', ['-c', startCommand], { 
+                        detached: true,
+                        cwd: projectPath // Explicitly set current working directory
+                    });
                     
                     child.stdout.on('data', (data) => {
                         socket.emit('deploymentStatus', `App output: ${data.toString()}`);
@@ -139,15 +150,19 @@ function deployNodeApp(projectPath, socket) {
                 } else {
                     socket.emit('deploymentStatus', 'No start script found in package.json');
                 }
+                
+                // Return to original directory
+                process.chdir(originalDir);
+                
             } catch (err) {
                 socket.emit('deploymentStatus', `Error reading package.json: ${err.message}`);
+                process.chdir(originalDir); // Return to original directory
             }
         });
     } catch (err) {
         socket.emit('deploymentStatus', `Deployment error: ${err.message}`);
     }
 }
-
 io.on('connection', (socket) => {
     console.log('Client connected');
     
