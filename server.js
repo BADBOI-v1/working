@@ -22,8 +22,17 @@ const recordsFile = 'fileRecords.json';
 
 // Load previous file records if they exist
 let uploadedFiles = [];
-if (fs.existsSync(recordsFile)) {
-    uploadedFiles = JSON.parse(fs.readFileSync(recordsFile, 'utf8'));
+try {
+    if (fs.existsSync(recordsFile)) {
+        const data = fs.readFileSync(recordsFile, 'utf8');
+        uploadedFiles = JSON.parse(data);
+        if (!Array.isArray(uploadedFiles)) {
+            throw new Error('Invalid file format');
+        }
+    }
+} catch (error) {
+    console.error(`Failed to load file records: ${error.message}`);
+    uploadedFiles = []; // Reset to empty array if corrupted or invalid
 }
 
 // Function to save file records persistently
