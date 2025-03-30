@@ -17,6 +17,12 @@ const fileListSelect = document.getElementById('file-list');
 const deleteButton = document.getElementById('delete-button');
 const viewButton = document.getElementById('view-button');
 const fileContent = document.getElementById('file-content');
+const fileManagementSection = document.getElementById('file-management-section');
+
+// Initialize the file management section as hidden
+if (fileManagementSection) {
+    fileManagementSection.style.display = 'none';
+}
 
 // Event listeners for command operations
 sendButton.addEventListener('click', () => {
@@ -30,6 +36,9 @@ sendButton.addEventListener('click', () => {
 filesButton.addEventListener('click', () => {
     socket.emit('listFiles');
     logDisplay.classList.remove('hidden'); // Show the log display when files are requested
+    
+    // Check if we have files and show the file management section
+    checkAndShowFileManagement();
 });
 
 myPathButton.addEventListener('click', () => {
@@ -107,6 +116,19 @@ document.getElementById('create-file-button').addEventListener('click', () => {
     }
 });
 
+// Helper function to check if there are files and show file management section
+function checkAndShowFileManagement() {
+    if (fileListSelect && fileListSelect.options.length > 0) {
+        if (fileManagementSection) {
+            fileManagementSection.style.display = 'block';
+        }
+    } else {
+        if (fileManagementSection) {
+            fileManagementSection.style.display = 'none';
+        }
+    }
+}
+
 // Socket event handlers
 socket.on('resourceUsage', (data) => {
   cpuUsage.textContent = data.cpu;
@@ -142,6 +164,9 @@ socket.on('fileList', (files) => {
         
         fileListSelect.appendChild(option);
     });
+    
+    // After updating the file list, check if we should show the file management section
+    checkAndShowFileManagement();
 });
 
 socket.on('fileContent', (content) => {
@@ -156,3 +181,6 @@ socket.on('deploymentStatus', (message) => {
     logDisplay.appendChild(logEntry);
     logDisplay.scrollTop = logDisplay.scrollHeight;
 });
+
+// Check file list on initial load
+socket.emit('listFiles');
