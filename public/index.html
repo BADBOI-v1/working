@@ -138,35 +138,16 @@
       </button>
     </div>
 
-    <!-- Add this to your index.html file to organize the file management section -->
-<div id="file-management-section">
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>File Operations</h5>
-    </div>
-    <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <select id="file-list" class="form-control" size="10"></select>
-        </div>
-        <div class="col-md-6">
-          <textarea id="file-content" class="form-control" rows="10" readonly></textarea>
-        </div>
+    <!-- File Management Section -->
+    <div class="mb-6">
+      <div class="flex items-center mb-2">
+        <i class="fas fa-file-alt text-red-500 mr-2"></i>
+        <h2 class="text-lg font-bold">File Management</h2>
       </div>
-      <div class="row">
-        <div class="col">
-          <button id="view-button" class="btn btn-primary">View</button>
-          <button id="delete-button" class="btn btn-danger">Delete</button>
-          <button id="create-folder-button" class="btn btn-success">Create Folder</button>
-          <button id="create-file-button" class="btn btn-info">Create File</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
       
       <!-- Upload Section -->
-      <div class="bg-gray-800 p-4 rounded-lg mb-4 border border-gray-700">
+      <div class="glass-effect p-4 rounded-lg mb-4">
+        <h3 class="text-md font-bold mb-2 text-gray-300">Upload Files</h3>
         <div class="flex flex-col md:flex-row gap-4 items-center">
           <div class="relative w-full">
             <input type="file" id="file-upload" class="hidden">
@@ -186,34 +167,72 @@
         </div>
       </div>
 
-      <!-- File Management Area -->
-      <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
-        <div class="relative mb-4">
-          <select id="file-list" class="w-full p-3 bg-gray-700 border-2 border-red-500 rounded text-white appearance-none">
-            <option value="">-- Select a file or folder --</option>
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-red-500">
-            <i class="fas fa-chevron-down"></i>
-          </div>
-        </div>
-
-        <div class="flex justify-between mb-4">
-          <button id="delete-button" class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded text-white transition-all duration-200 flex items-center">
-            <i class="fas fa-trash-alt mr-2"></i>
-            Delete
-          </button>
-          <button id="view-button" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded text-white transition-all duration-200 flex items-center">
-            <i class="fas fa-eye mr-2"></i>
-            View Content
-          </button>
-        </div>
+      <!-- File Browser -->
+      <div class="glass-effect p-4 rounded-lg mb-4">
+        <h3 class="text-md font-bold mb-2 text-gray-300">File Browser</h3>
         
-        <div class="relative">
-          <textarea id="file-content" class="w-full h-36 p-3 bg-gray-700 border-2 border-red-500 rounded text-white" readonly>// File content will appear here when you select a file and click "View Content"</textarea>
-          <div class="absolute top-2 right-2 flex">
-            <button id="copy-button" class="p-1 bg-gray-600 rounded text-white hover:bg-gray-500 transition-colors">
-              <i class="fas fa-copy"></i>
-            </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- File List Column -->
+          <div>
+            <div class="bg-gray-800 border border-gray-700 rounded h-60 overflow-y-auto p-2">
+              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
+                <i class="fas fa-folder text-yellow-500 mr-2"></i>
+                <span>config</span>
+              </div>
+              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
+                <i class="fas fa-folder text-yellow-500 mr-2"></i>
+                <span>public</span>
+              </div>
+              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
+                <i class="fas fa-file-code text-blue-400 mr-2"></i>
+                <span>server.js</span>
+              </div>
+              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
+                <i class="fas fa-file text-gray-400 mr-2"></i>
+                <span>README.md</span>
+              </div>
+              <div class="mb-2 flex items-center hover:bg-gray-700 p-2 rounded cursor-pointer">
+                <i class="fas fa-file-alt text-gray-400 mr-2"></i>
+                <span>package.json</span>
+              </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex mt-2 space-x-2">
+              <button class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm flex-1 flex items-center justify-center">
+                <i class="fas fa-folder-plus mr-1"></i> New Folder
+              </button>
+              <button class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm flex-1 flex items-center justify-center">
+                <i class="fas fa-file-medical mr-1"></i> New File
+              </button>
+              <button class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-white text-sm flex-1 flex items-center justify-center">
+                <i class="fas fa-trash-alt mr-1"></i> Delete
+              </button>
+            </div>
+          </div>
+          
+          <!-- File Content Column -->
+          <div>
+            <div class="relative">
+              <textarea id="file-content" class="w-full h-60 p-3 bg-gray-800 border border-gray-700 rounded text-white font-mono text-sm resize-none" readonly>// Select a file to view its contents</textarea>
+              <div class="absolute top-2 right-2 flex space-x-1">
+                <button id="edit-button" class="p-1 bg-blue-600 rounded text-white hover:bg-blue-500 transition-colors">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button id="copy-button" class="p-1 bg-gray-600 rounded text-white hover:bg-gray-500 transition-colors">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button id="save-button" class="p-1 bg-green-600 rounded text-white hover:bg-green-500 transition-colors hidden">
+                  <i class="fas fa-save"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- File Info -->
+            <div class="mt-2 text-xs text-gray-400 flex justify-between">
+              <span>Size: <span id="file-size">0 KB</span></span>
+              <span>Last modified: <span id="file-modified">N/A</span></span>
+            </div>
           </div>
         </div>
       </div>
@@ -241,8 +260,7 @@
     <p>© 2025 Command Center | Server Version 3.7.2</p>
   </footer>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
   <script>
     // Demo functionality for the UI preview
     document.getElementById('file-upload').addEventListener('change', function(e) {
@@ -258,6 +276,32 @@
       // Notification
       const notification = document.createElement('div');
       notification.textContent = 'Copied to clipboard!';
+      notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 2000);
+    });
+
+    // Edit functionality
+    document.getElementById('edit-button').addEventListener('click', function() {
+      const textarea = document.getElementById('file-content');
+      textarea.readOnly = false;
+      textarea.focus();
+      this.classList.add('hidden');
+      document.getElementById('save-button').classList.remove('hidden');
+    });
+
+    document.getElementById('save-button').addEventListener('click', function() {
+      const textarea = document.getElementById('file-content');
+      textarea.readOnly = true;
+      this.classList.add('hidden');
+      document.getElementById('edit-button').classList.remove('hidden');
+      
+      // Notification
+      const notification = document.createElement('div');
+      notification.textContent = 'File saved successfully!';
       notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg';
       document.body.appendChild(notification);
       
@@ -289,6 +333,34 @@
         logDisplay.scrollTop = logDisplay.scrollHeight;
       }
     }, 3000);
+
+    // File browser functionality
+    document.querySelectorAll('.bg-gray-800.border.border-gray-700.rounded.h-60 > div').forEach(item => {
+      item.addEventListener('click', function() {
+        // Highlighting the selected item
+        document.querySelectorAll('.bg-gray-800.border.border-gray-700.rounded.h-60 > div').forEach(el => {
+          el.classList.remove('bg-gray-700');
+        });
+        this.classList.add('bg-gray-700');
+        
+        // Show file content if it's a file
+        const isFolder = this.querySelector('i').classList.contains('fa-folder');
+        if (!isFolder) {
+          const fileName = this.querySelector('span').textContent;
+          document.getElementById('file-content').value = `// Content of ${fileName}\n\n` + 
+            (fileName.endsWith('.js') ? 
+              '// Sample JavaScript code\nconst express = require("express");\nconst app = express();\n\napp.get("/", (req, res) => {\n  res.send("Hello World!");\n});\n\napp.listen(3000, () => {\n  console.log("Server running on port 3000");\n});' : 
+              fileName.endsWith('.json') ? 
+              '{\n  "name": "server-app",\n  "version": "1.0.0",\n  "description": "Server application",\n  "main": "server.js",\n  "scripts": {\n    "start": "node server.js"\n  },\n  "dependencies": {\n    "express": "^4.17.1"\n  }\n}' : 
+              '# Server Application\n\nThis is a sample README file for the server application.\n\n## Installation\n\n```\nnpm install\n```\n\n## Usage\n\n```\nnpm start\n```');
+          
+          // Update file info
+          document.getElementById('file-size').textContent = Math.floor(Math.random() * 100) + ' KB';
+          const date = new Date();
+          document.getElementById('file-modified').textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+      });
+    });
   </script>
 </body>
-                </html>
+    </html>
