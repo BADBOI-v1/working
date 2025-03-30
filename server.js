@@ -1,3 +1,4 @@
+
 const express = require('express');
 const { spawn, exec } = require('child_process');
 const path = require('path');
@@ -360,58 +361,69 @@ io.on('connection', (socket) => {
     });
 
     socket.on('deleteFile', (filename) => {
-        //Delete from disk
-        fs.stat(filename, (err, stats) => {
-            if (err) {
-                socket.emit('log', `Failed to get file stats: ${err}`);
-                return;
-            }
-            
-            if (stats.isDirectory()) {
-                // Remove directory and its contents
-                fs.rm(filename, { recursive: true }, (err) => {
-                    if (err) {
-                        socket.emit('log', `Failed to delete directory: ${err}`);
-                    } else {
-                        socket.emit('log', `Directory ${filename} deleted successfully`);
-                        socket.emit('listFiles'); // Refresh file list
-                    }
-                });
-            } else {
-                // Remove file
-                fs.unlink(filename, (err) => {
-                    if (err) {
-                        socket.emit('log', `Failed to delete file: ${err}`);
-                    } else {
-                        socket.emit('log', `File ${filename} deleted successfully`);
-                        socket.emit('listFiles'); // Refresh file list
-                    }
-                });
-            }
-        });
-    });
+    if (!filename) {
+        socket.emit('log', 'Error: No filename provided for deletion.');
+        return;
+    }
 
-    socket.on('viewFile', (filename) => {
-        //Read Content and send to client.
-        fs.stat(filename, (err, stats) => {
-            if (err) {
-                socket.emit('log', `Failed to get file stats: ${err}`);
-                return;
-            }
-            
-            if (stats.isDirectory()) {
-                socket.emit('log', `Cannot view content of directory ${filename}`);
-            } else {
-                fs.readFile(filename, 'utf8', (err, data) => {
-                    if (err) {
-                        socket.emit('log', `Failed to view file: ${err}`);
-                    } else {
-                        socket.emit('fileContent', data);
-                    }
-                });
-            }
-        });
+    const filePath = path.join(UPLOADS_DIR, filename);
+
+    fs.stat(filePath, (err, stats) => {
+        if (err) {
+            socket.emit('log', `Error: Could not find file ${filename}. It may not exist.`);
+            return;
+        }
+
+        if (stats.isDirectory()) {
+            fs.rm(filePath, { recursive: true, force: true }, (err) => {
+                if (err) {
+                    socket.emit('log', `Error: Failed to delete directory ${filename}: ${err.message}`);
+                } else {
+                    socket.emit('log', `Directory ${filename} deleted successfully.`);
+                    socket.emit('listFiles', UPLOADS_DIR); // Refresh UI
+                }
+            });
+        } else {
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    socket.emit('log', `Error: Failed to delete file ${filename}: ${err.message}`);
+                } else {
+                    socket.emit('log', `File ${filename} deleted successfully.`);
+                    socket.emit('listFiles', UPLOADS_DIR); // Refresh UI
+                }
+            });
+        }
     });
+});
+
+socket.on('viewFile', (filename) => {
+    if (!filename) {
+        socket.emit('log', 'Error: No filename provided for viewing.');
+        return;
+    }
+
+    const filePath = path.join(UPLOADS_DIR, filename);
+
+    fs.stat(filePath, (err, stats) => {
+        if (err) {
+            socket.emit('log', `Error: File ${filename} not found.`);
+            return;
+        }
+
+        if (stats.isDirectory()) {
+            socket.emit('log', `Error: ${filename} is a directory and cannot be viewed.`);
+        } else {
+            fs.readFile(filePath, 'utf8', (err, data) => {
+                if (err) {
+                    socket.emit('log', `Error: Failed to read file ${filename}: ${err.message}`);
+                } else {
+                    socket.emit('fileContent', { filename, content: data });
+                }
+            });
+        }
+    });
+});
+
 
     // New event handler for creating a new folder
     socket.on('createFolder', (data) => {
