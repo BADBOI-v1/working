@@ -15,6 +15,9 @@ if (!fs.existsSync(storageDir)) {
     fs.mkdirSync(storageDir, { recursive: true });
 }
 
+// Temporary extract folder
+const extractDir = path.join(__dirname, 'extract');
+
 // Keep track of user uploaded files for security
 const uploadedFiles = new Set();
 
@@ -49,6 +52,87 @@ function formatUptime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
+}
+
+// Function to ensure extract directory exists and is empty
+function ensureExtractDir() {
+    // Delete the extract directory if it exists
+    if (fs.existsSync(extractDir)) {
+        fs.rmSync(extractDir, { recursive: true, force: true });
+    }
+    
+    // Create a fresh extract directory
+    fs.mkdirSync(extractDir, { recursive: true });
+    
+    return extractDir;
+}
+
+// Function to move files from extract to storage
+function moveFilesToStorage(srcDir, socket) {
+    try {
+        // Create a unique folder name in storage
+        const timestamp = new Date().toISOString().replace(/:/g, '-');
+        const destDir = path.join(storageDir, `upload_${timestamp}`);
+        fs.mkdirSync(destDir, { recursive: true });
+        
+        // Move all files/folders from extract to the new folder in storage
+        const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+        
+        for (const entry of entries) {
+            const srcPath = path.join(srcDir, entry.name);
+            const destPath = path.join(destDir, entry.name);
+            
+            // Copy files/folders to storage
+            if (entry.isDirectory()) {
+                copyFolderRecursiveSync(srcPath, destPath);
+            } else {
+                fs.copyFileSync(srcPath, destPath);
+            }
+            
+            // Mark as user uploaded
+            uploadedFiles.add(destPath);
+        }
+        
+        socket.emit('log', `All files moved from extract to ${destDir}`);
+        
+        // Return the path to the new storage location
+        return destDir;
+    } catch (err) {
+        socket.emit('log', `Error moving files to storage: ${err.message}`);
+        return null;
+    } finally {
+        // Clean up the extract directory
+        if (fs.existsSync(extractDir)) {
+            fs.rmSync(extractDir, { recursive: true, force: true });
+            socket.emit('log', 'Extract directory cleaned up');
+        }
+    }
+}
+
+// Helper function to copy folder and its contents recursively
+function copyFolderRecursiveSync(src, dest) {
+    // Create destination folder if it doesn't exist
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+    }
+    
+    // Read all files/folders in the source
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    
+    for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        
+        // Recursively copy directories, directly copy files
+        if (entry.isDirectory()) {
+            copyFolderRecursiveSync(srcPath, destPath);
+        } else {
+            fs.copyFileSync(srcPath, destPath);
+        }
+        
+        // Mark as user uploaded
+        uploadedFiles.add(destPath);
+    }
 }
 
 // Improved function to find package.json in extracted zip contents
@@ -163,6 +247,37 @@ function deployNodeApp(projectPath, socket) {
         socket.emit('deploymentStatus', `Deployment error: ${err.message}`);
     }
 }
+
+// Mark all files recursively as user uploaded
+function markExtractedFilesAsUploaded(directory) {
+    try {
+        const entries = fs.readdirSync(directory, { withFileTypes: true });
+        
+        for (const entry of entries) {
+            const fullPath = path.join(directory, entry.name);
+            uploadedFiles.add(fullPath);
+            
+            if (entry.isDirectory()) {
+                markExtractedFilesAsUploaded(fullPath);
+            }
+        }
+    } catch (err) {
+        console.error(`Error marking extracted files: ${err}`);
+    }
+}
+
+// Helper function to remove directory and its contents from uploadedFiles
+function removeFromUploadedFiles(directory) {
+    uploadedFiles.delete(directory);
+    
+    // Remove all files that start with this directory path
+    for (const file of uploadedFiles) {
+        if (file.startsWith(directory + path.sep)) {
+            uploadedFiles.delete(file);
+        }
+    }
+}
+
 io.on('connection', (socket) => {
     console.log('Client connected');
     
@@ -248,100 +363,92 @@ io.on('connection', (socket) => {
         process.exit(0);
     });
 
-     socket.on('uploadFile', (data) => {
-    const { filename, content } = data;
-    const filePath = path.join(currentDir, filename);
-    
-    // Check if it's a zip file
-    if (filename.toLowerCase().endsWith('.zip')) {
-        // Save the zip file first
-        fs.writeFile(filePath, Buffer.from(content.split(',')[1], 'base64'), (err) => {
-            if (err) {
-                socket.emit('log', `Failed to upload zip file: ${err}`);
-            } else {
-                socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
-                
-                // Mark as user uploaded
-                uploadedFiles.add(filePath);
-                
-                // Extract the zip file directly to the current directory
-                try {
-                    const zip = new AdmZip(filePath);
-                    zip.extractAllTo(currentDir, true);
-                    socket.emit('log', `Extracted zip file ${filename} directly to ${currentDir} successfully`);
-                    
-                    // Mark all extracted files as user uploaded for security
-                    markExtractedFilesAsUploaded(currentDir);
-                    
-                    // Look for package.json in the current directory
-                    const packageJsonDir = findPackageJson(currentDir);
-                    
-                    if (packageJsonDir) {
-                        socket.emit('log', `Found Node.js project at: ${packageJsonDir}`);
-                        
-                        try {
-                            // Verify package.json is readable before deployment
-                            const packageJsonContent = fs.readFileSync(path.join(packageJsonDir, 'package.json'), 'utf8');
-                            const packageJson = JSON.parse(packageJsonContent);
-                            
-                            if (packageJson) {
-                                socket.emit('log', `Verified package.json in ${packageJsonDir}`);
-                                
-                                // Auto deploy the application
-                                deployNodeApp(packageJsonDir, socket);
-                            }
-                        } catch (err) {
-                            socket.emit('log', `Error verifying package.json: ${err.message}`);
-                        }
-                    } else {
-                        socket.emit('log', 'No Node.js project found in the uploaded zip file');
-                    }
-                } catch (err) {
-                    socket.emit('log', `Failed to extract zip file: ${err}`);
-                }
-                
-                socket.emit('listFiles'); // Refresh file list after upload and extraction
-            }
-        });
-    } else {
-        // Regular file upload
-        let fileContent = content;
-        // Check if this is a base64 data URL
-        if (content.startsWith('data:')) {
-            const base64Data = content.split(',')[1];
-            fileContent = Buffer.from(base64Data, 'base64');
-        }
+    socket.on('uploadFile', (data) => {
+        const { filename, content } = data;
         
-        fs.writeFile(filePath, fileContent, (err) => {
-            if (err) {
-                socket.emit('log', `Failed to upload file: ${err}`);
-            } else {
-                socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
-                // Mark as user uploaded
-                uploadedFiles.add(filePath);
-                socket.emit('listFiles'); // Refresh file list after upload
-            }
-        });
-    }
-});
-
-    // Helper function to mark all extracted files recursively as user uploaded
-    function markExtractedFilesAsUploaded(directory) {
-        try {
-            const entries = fs.readdirSync(directory, { withFileTypes: true });
+        // Check if it's a zip file
+        if (filename.toLowerCase().endsWith('.zip')) {
+            // Ensure extract directory is empty
+            const extractPath = ensureExtractDir();
+            const tempZipPath = path.join(extractPath, filename);
             
-            for (const entry of entries) {
-                const fullPath = path.join(directory, entry.name);
-                uploadedFiles.add(fullPath);
-                
-                if (entry.isDirectory()) {
-                    markExtractedFilesAsUploaded(fullPath);
+            // Save the zip file to extract directory first
+            fs.writeFile(tempZipPath, Buffer.from(content.split(',')[1], 'base64'), (err) => {
+                if (err) {
+                    socket.emit('log', `Failed to upload zip file: ${err}`);
+                } else {
+                    socket.emit('log', `File ${filename} uploaded to extract directory`);
+                    
+                    // Extract the zip file to the extract directory
+                    try {
+                        const zip = new AdmZip(tempZipPath);
+                        zip.extractAllTo(extractPath, true);
+                        socket.emit('log', `Extracted zip file to extract directory`);
+                        
+                        // Delete the original zip file as we only need extracted contents
+                        fs.unlinkSync(tempZipPath);
+                        
+                        // Move all extracted contents to storage directory
+                        const storageDestPath = moveFilesToStorage(extractPath, socket);
+                        
+                        if (storageDestPath) {
+                            // Look for package.json in the moved directory
+                            const packageJsonDir = findPackageJson(storageDestPath);
+                            
+                            if (packageJsonDir) {
+                                socket.emit('log', `Found Node.js project at: ${packageJsonDir}`);
+                                
+                                try {
+                                    // Verify package.json is readable before deployment
+                                    const packageJsonContent = fs.readFileSync(path.join(packageJsonDir, 'package.json'), 'utf8');
+                                    const packageJson = JSON.parse(packageJsonContent);
+                                    
+                                    if (packageJson) {
+                                        socket.emit('log', `Verified package.json in ${packageJsonDir}`);
+                                        
+                                        // Change current directory to the storage location
+                                        currentDir = storageDestPath;
+                                        
+                                        // Auto deploy the application
+                                        deployNodeApp(packageJsonDir, socket);
+                                    }
+                                } catch (err) {
+                                    socket.emit('log', `Error verifying package.json: ${err.message}`);
+                                }
+                            } else {
+                                socket.emit('log', 'No Node.js project found in the uploaded zip file');
+                            }
+                        }
+                    } catch (err) {
+                        socket.emit('log', `Failed to extract zip file: ${err}`);
+                    }
+                    
+                    socket.emit('listFiles'); // Refresh file list
                 }
+            });
+        } else {
+            // Regular file upload directly to storage
+            const filePath = path.join(currentDir, filename);
+            let fileContent = content;
+            
+            // Check if this is a base64 data URL
+            if (content.startsWith('data:')) {
+                const base64Data = content.split(',')[1];
+                fileContent = Buffer.from(base64Data, 'base64');
             }
-        } catch (err) {
-            console.error(`Error marking extracted files: ${err}`);
+            
+            fs.writeFile(filePath, fileContent, (err) => {
+                if (err) {
+                    socket.emit('log', `Failed to upload file: ${err}`);
+                } else {
+                    socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
+                    // Mark as user uploaded
+                    uploadedFiles.add(filePath);
+                    socket.emit('listFiles'); // Refresh file list after upload
+                }
+            });
         }
-    }
+    });
 
     socket.on('deleteFile', (filename) => {
         const filePath = path.join(currentDir, filename);
@@ -386,18 +493,6 @@ io.on('connection', (socket) => {
             }
         });
     });
-
-    // Helper function to remove directory and its contents from uploadedFiles
-    function removeFromUploadedFiles(directory) {
-        uploadedFiles.delete(directory);
-        
-        // Remove all files that start with this directory path
-        for (const file of uploadedFiles) {
-            if (file.startsWith(directory + path.sep)) {
-                uploadedFiles.delete(file);
-            }
-        }
-    }
 
     socket.on('viewFile', (filename) => {
         const filePath = path.join(currentDir, filename);
@@ -472,3 +567,9 @@ io.on('connection', (socket) => {
         console.log('Client disconnected');
     });
 });
+
+// Clean up extract directory on server start
+if (fs.existsSync(extractDir)) {
+    fs.rmSync(extractDir, { recursive: true, force: true });
+    console.log('Cleaned up extract directory on startup');
+}
