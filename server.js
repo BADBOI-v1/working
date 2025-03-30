@@ -266,22 +266,52 @@ io.on('connection', (socket) => {
       });
     });
 
-    socket.on('listFiles', (directory = UPLOADS_DIR) => {
-    fs.readdir(directory, { withFileTypes: true }, (err, dirents) => {
+    socket.on('listFiles', () => {
+    fs.readdir(UPLOADS_DIR, { withFileTypes: true }, (err, dirents) => {
         if (err) {
-            socket.emit('log', `Error: Failed to list files in ${directory}: ${err.message}`);
+            socket.emit('log', `Error: Failed to list files: ${err.message}`);
             return;
         }
 
         const files = dirents.map(dirent => ({
             name: dirent.name,
-            isDirectory: dirent.isDirectory(),
-            path: path.join(directory, dirent.name) // Send full path
+            isDirectory: dirent.isDirectory()
         }));
 
-        socket.emit('fileList', { files, currentPath: directory });
+        socket.on('fileList', (data) => {
+    const fileContainer = document.getElementById('fileContainer');
+    fileContainer.innerHTML = '';
+
+    data.files.forEach(file => {
+        const fileElement = document.createElement('div');
+        fileElement.textContent = file.name;
+        fileElement.onclick = () => viewFile(file.name);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = (event) => {
+            event.stopPropagation();
+            deleteFile(file.name);
+        };
+
+        fileElement.appendChild(deleteButton);
+        fileContainer.appendChild(fileElement);
     });
 });
+
+function viewFile(filename) {
+    socket.emit('viewFile', filename);
+}
+
+function deleteFile(filename) {
+    socket.emit('deleteFile', filename);
+}
+
+socket.on('fileContent', (data) => {
+    document.getElementById('fileViewer').textContent = data.content;
+});
+
+
 
 
     socket.on('getMyPath', () => {
@@ -358,7 +388,7 @@ io.on('connection', (socket) => {
 
     socket.on('deleteFile', (filename) => {
     if (!filename) {
-        socket.emit('log', 'Error: No filename provided for deletion.');
+        socket.emit('log', 'Error: No filename provided.');
         return;
     }
 
@@ -366,59 +396,58 @@ io.on('connection', (socket) => {
 
     fs.stat(filePath, (err, stats) => {
         if (err) {
-            socket.emit('log', `Error: Could not find file ${filename}. It may not exist.`);
+            socket.emit('log', `Error: File not found: ${filename}`);
             return;
         }
 
         if (stats.isDirectory()) {
             fs.rm(filePath, { recursive: true, force: true }, (err) => {
                 if (err) {
-                    socket.emit('log', `Error: Failed to delete directory ${filename}: ${err.message}`);
+                    socket.emit('log', `Error: Failed to delete directory: ${filename} - ${err.message}`);
                 } else {
-                    socket.emit('log', `Directory ${filename} deleted successfully.`);
-                    socket.emit('listFiles', UPLOADS_DIR); // Refresh UI
+                    socket.emit('log', `Success: Directory ${filename} deleted.`);
+                    socket.emit('listFiles');
                 }
             });
         } else {
             fs.unlink(filePath, (err) => {
                 if (err) {
-                    socket.emit('log', `Error: Failed to delete file ${filename}: ${err.message}`);
+                    socket.emit('log', `Error: Failed to delete file: ${filename} - ${err.message}`);
                 } else {
-                    socket.emit('log', `File ${filename} deleted successfully.`);
-                    socket.emit('listFiles', UPLOADS_DIR); // Refresh UI
+                    socket.emit('log', `Success: File ${filename} deleted.`);
+                    socket.emit('listFiles');
                 }
             });
         }
     });
 });
 
+
 socket.on('viewFile', (filename) => {
     if (!filename) {
-        socket.emit('log', 'Error: No filename provided for viewing.');
+        socket.emit('log', 'Error: No filename provided.');
         return;
     }
 
     const filePath = path.join(UPLOADS_DIR, filename);
 
     fs.stat(filePath, (err, stats) => {
-        if (err) {
-            socket.emit('log', `Error: File ${filename} not found.`);
+        if (err || !stats.isFile()) {
+            socket.emit('log', `Error: File not found: ${filename}`);
             return;
         }
 
-        if (stats.isDirectory()) {
-            socket.emit('log', `Error: ${filename} is a directory and cannot be viewed.`);
-        } else {
-            fs.readFile(filePath, 'utf8', (err, data) => {
-                if (err) {
-                    socket.emit('log', `Error: Failed to read file ${filename}: ${err.message}`);
-                } else {
-                    socket.emit('fileContent', { filename, content: data });
-                }
-            });
-        }
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                socket.emit('log', `Error: Failed to read file: ${filename} - ${err.message}`);
+            } else {
+                socket.emit('fileContent', { filename, content: data });
+            }
+        });
     });
 });
+
+
 
 
     // New event handler for creating a new folder
