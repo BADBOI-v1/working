@@ -85,7 +85,7 @@ function findPackageJson(directory) {
     return packageJsonPath;
 }
 
- function deployNodeApp(projectPath, socket) {
+function deployNodeApp(projectPath, socket) {
     socket.emit('deploymentStatus', `Starting deployment from: ${projectPath}`);
     
     try {
@@ -248,86 +248,82 @@ io.on('connection', (socket) => {
         process.exit(0);
     });
 
-    socket.on('uploadFile', (data) => {
-        const { filename, content } = data;
-        const filePath = path.join(currentDir, filename);
-        
-        // Check if it's a zip file
-        if (filename.toLowerCase().endsWith('.zip')) {
-            // Save the zip file first
-            fs.writeFile(filePath, Buffer.from(content.split(',')[1], 'base64'), (err) => {
-                if (err) {
-                    socket.emit('log', `Failed to upload zip file: ${err}`);
-                } else {
-                    socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
+     socket.on('uploadFile', (data) => {
+    const { filename, content } = data;
+    const filePath = path.join(currentDir, filename);
+    
+    // Check if it's a zip file
+    if (filename.toLowerCase().endsWith('.zip')) {
+        // Save the zip file first
+        fs.writeFile(filePath, Buffer.from(content.split(',')[1], 'base64'), (err) => {
+            if (err) {
+                socket.emit('log', `Failed to upload zip file: ${err}`);
+            } else {
+                socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
+                
+                // Mark as user uploaded
+                uploadedFiles.add(filePath);
+                
+                // Extract the zip file directly to the current directory
+                try {
+                    const zip = new AdmZip(filePath);
+                    zip.extractAllTo(currentDir, true);
+                    socket.emit('log', `Extracted zip file ${filename} directly to ${currentDir} successfully`);
                     
-                    // Mark as user uploaded
-                    uploadedFiles.add(filePath);
+                    // Mark all extracted files as user uploaded for security
+                    markExtractedFilesAsUploaded(currentDir);
                     
-                    // Create a unique extraction directory to prevent conflicts
-                    const extractionDir = path.join(currentDir, `extracted_${Date.now()}`);
-                    fs.mkdirSync(extractionDir, { recursive: true });
+                    // Look for package.json in the current directory
+                    const packageJsonDir = findPackageJson(currentDir);
                     
-                    // Extract the zip file
-                    try {
-                        const zip = new AdmZip(filePath);
-                        zip.extractAllTo(extractionDir, true);
-                        socket.emit('log', `Extracted zip file ${filename} to ${extractionDir} successfully`);
+                    if (packageJsonDir) {
+                        socket.emit('log', `Found Node.js project at: ${packageJsonDir}`);
                         
-                        // Mark all extracted files as user uploaded for security
-                        markExtractedFilesAsUploaded(extractionDir);
-                        
-                        // Look for package.json in the extracted directory
-                        const packageJsonDir = findPackageJson(extractionDir);
-                        
-                        if (packageJsonDir) {
-                            socket.emit('log', `Found Node.js project at: ${packageJsonDir}`);
+                        try {
+                            // Verify package.json is readable before deployment
+                            const packageJsonContent = fs.readFileSync(path.join(packageJsonDir, 'package.json'), 'utf8');
+                            const packageJson = JSON.parse(packageJsonContent);
                             
-                            try {
-                                // Verify package.json is readable before deployment
-                                const packageJsonContent = fs.readFileSync(path.join(packageJsonDir, 'package.json'), 'utf8');
-                                const packageJson = JSON.parse(packageJsonContent);
+                            if (packageJson) {
+                                socket.emit('log', `Verified package.json in ${packageJsonDir}`);
                                 
-                                if (packageJson) {
-                                    socket.emit('log', `Verified package.json in ${packageJsonDir}`);
-                                    
-                                    // Auto deploy the application
-                                    deployNodeApp(packageJsonDir, socket);
-                                }
-                            } catch (err) {
-                                socket.emit('log', `Error verifying package.json: ${err.message}`);
+                                // Auto deploy the application
+                                deployNodeApp(packageJsonDir, socket);
                             }
-                        } else {
-                            socket.emit('log', 'No Node.js project found in the uploaded zip file');
+                        } catch (err) {
+                            socket.emit('log', `Error verifying package.json: ${err.message}`);
                         }
-                    } catch (err) {
-                        socket.emit('log', `Failed to extract zip file: ${err}`);
+                    } else {
+                        socket.emit('log', 'No Node.js project found in the uploaded zip file');
                     }
-                    
-                    socket.emit('listFiles'); // Refresh file list after upload and extraction
+                } catch (err) {
+                    socket.emit('log', `Failed to extract zip file: ${err}`);
                 }
-            });
-        } else {
-            // Regular file upload
-            let fileContent = content;
-            // Check if this is a base64 data URL
-            if (content.startsWith('data:')) {
-                const base64Data = content.split(',')[1];
-                fileContent = Buffer.from(base64Data, 'base64');
+                
+                socket.emit('listFiles'); // Refresh file list after upload and extraction
             }
-            
-            fs.writeFile(filePath, fileContent, (err) => {
-                if (err) {
-                    socket.emit('log', `Failed to upload file: ${err}`);
-                } else {
-                    socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
-                    // Mark as user uploaded
-                    uploadedFiles.add(filePath);
-                    socket.emit('listFiles'); // Refresh file list after upload
-                }
-            });
+        });
+    } else {
+        // Regular file upload
+        let fileContent = content;
+        // Check if this is a base64 data URL
+        if (content.startsWith('data:')) {
+            const base64Data = content.split(',')[1];
+            fileContent = Buffer.from(base64Data, 'base64');
         }
-    });
+        
+        fs.writeFile(filePath, fileContent, (err) => {
+            if (err) {
+                socket.emit('log', `Failed to upload file: ${err}`);
+            } else {
+                socket.emit('log', `File ${filename} uploaded successfully to ${filePath}`);
+                // Mark as user uploaded
+                uploadedFiles.add(filePath);
+                socket.emit('listFiles'); // Refresh file list after upload
+            }
+        });
+    }
+});
 
     // Helper function to mark all extracted files recursively as user uploaded
     function markExtractedFilesAsUploaded(directory) {
