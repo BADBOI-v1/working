@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hosting Control Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Pulse Animation for Alert States */
+        @keyframes pulse-effect {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+        .pulse-alert {
+            animation: pulse-effect 2s infinite;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dc2626;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b91c1c;
+        }
+        /* Glassmorphism Effect */
+        .glass-effect {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+        /* Custom container width */
+        .container-wide {
+            width: 95%;
+            max-width: 1920px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Increased height for elements */
+        .h-increased {
+            height: 60px;
+        }
+        .textarea-increased {
+            height: 220px;
+        }
+        .log-increased {
+            height: 300px;
+        }
+        /* Authentication container */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .auth-form {
+            width: 100%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-black text-white font-sans min-h-screen">
+  
+  <!-- Authentication Container -->
+  <div id="auth-container" class="auth-container">
+    <div class="auth-form glass-effect p-8 rounded-lg">
+      <div id="login-form">
+        <div class="flex justify-center mb-6">
+          <i class="fas fa-server text-red-500 text-5xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-center mb-6">Command Center Login</h2>
+        <div class="mb-4">
+          <label for="login-username" class="block text-gray-400 mb-2">Username</label>
+          <input type="text" id="login-username" class="w-full p-3 bg-gray-800 border-2 border-red-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
+        </div>
+        <div class="mb-6">
+          <label for="login-password" class="block text-gray-400 mb-2">Password</label>
+          <input type="password" id="login-password" class="w-full p-3 bg-gray-800 border-2 border-red-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
+        </div>
+        <div class="mb-4">
+          <button id="login-button" class="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded text-white transition-all duration-200">
+            <i class="fas fa-sign-in-alt mr-2"></i> Login
+          </button>
+        </div>
+        <div class="text-center">
+          <a href="#" id="show-register" class="text-red-400 hover:text-red-300 text-sm">Don't have an account? Register</a>
+        </div>
+        <div id="login-error" class="mt-4 text-red-400 text-center hidden"></div>
+      </div>
+
+      <div id="register-form" class="hidden">
+        <div class="flex justify-center mb-6">
+          <i class="fas fa-user-plus text-red-500 text-5xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-center mb-6">Create Account</h2>
+        <div class="mb-4">
+          <label for="register-username" class="block text-gray-400 mb-2">Username</label>
+          <input type="text" id="register-username" class="w-full p-3 bg-gray-800 border-2 border-red-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
+        </div>
+        <div class="mb-4">
+          <label for="register-password" class="block text-gray-400 mb-2">Password</label>
+          <input type="password" id="register-password" class="w-full p-3 bg-gray-800 border-2 border-red-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
+        </div>
+        <div class="mb-6">
+          <label for="register-confirm-password" class="block text-gray-400 mb-2">Confirm Password</label>
+          <input type="password" id="register-confirm-password" class="w-full p-3 bg-gray-800 border-2 border-red-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
+        </div>
+        <div class="mb-4">
+          <button id="register-button" class="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded text-white transition-all duration-200">
+            <i class="fas fa-user-plus mr-2"></i> Register
+          </button>
+        </div>
+        <div class="text-center">
+          <a href="#" id="show-login" class="text-red-400 hover:text-red-300 text-sm">Already have an account? Login</a>
+        </div>
+        <div id="register-error" class="mt-4 text-red-400 text-center hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-content" class="hidden">
+    <div class="container-wide p-4 md:p-6">
+      <!-- Header -->
+      <header class="flex justify-between items-center mb-6 glass-effect rounded-lg p-6">
+        <div class="flex items-center">
+          <i class="fas fa-server text-red-500 text-4xl mr-3"></i>
+          <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-500">Command Center</h1>
+        </div>
+        <div class="flex items-center">
+          <div class="text-lg text-gray-400 mr-6">
+            <span id="server-status" class="inline-flex items-center">
+              <span class="h-3 w-3 rounded-full bg-green-500 mr-2 pulse-alert"></span>
+              System Active
+            </span>
+          </div>
+          <div class="flex items-center">
+            <span id="user-display" class="mr-4 text-red-400">Welcome, User</span>
+            <button id="logout-button" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white transition-all duration-200">
+              <i class="fas fa-sign-out-alt mr-2"></i> Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Command Section -->
+      <div class="mb-8 glass-effect rounded-lg p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-terminal text-red-500 mr-2 text-xl"></i>
+          <h2 class="text-xl font-bold">Command Terminal</h2>
+        </div>
+        <div class="flex">
+          <input type="text" id="command-input" placeholder="Enter command..." 
+            class="w-full p-4 h-increased bg-gray-800 border-2 border-red-500 rounded-l text-white focus:outline-none focus:ring-2 focus:ring-red-700 transition">
+          <button id="send-button" 
+            class="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-r text-white flex items-center transition-all duration-200 transform hover:scale-105 h-increased">
+            <i class="fas fa-paper-plane mr-2"></i> Send
+          </button>
+        </div>
+      </div>
+
+      <!-- Resource Usage -->
+      <div class="mb-8">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-chart-line text-red-500 mr-2 text-xl"></i>
+          <h2 class="text-xl font-bold">System Resources</h2>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="glass-effect p-6 rounded-lg flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-gray-400 text-lg">CPU</span>
+              <i class="fas fa-microchip text-red-500 text-xl"></i>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
+              <div id="cpu-bar" class="bg-red-500 h-3 rounded-full" style="width: 45%"></div>
+            </div>
+            <span id="cpu-usage" class="text-2xl font-bold">45%</span>
+          </div>
+          
+          <div class="glass-effect p-6 rounded-lg flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-gray-400 text-lg">RAM</span>
+              <i class="fas fa-memory text-red-500 text-xl"></i>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
+              <div id="ram-bar" class="bg-red-500 h-3 rounded-full" style="width: 60%"></div>
+            </div>
+            <span id="ram-usage" class="text-2xl font-bold">3.6GB</span>
+          </div>
+          
+          <div class="glass-effect p-6 rounded-lg flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-gray-400 text-lg">Disk</span>
+              <i class="fas fa-hdd text-red-500 text-xl"></i>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
+              <div id="disk-bar" class="bg-red-500 h-3 rounded-full" style="width: 30%"></div>
+            </div>
+            <span id="disk-usage" class="text-2xl font-bold">120GB</span>
+          </div>
+          
+          <div class="glass-effect p-6 rounded-lg flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-gray-400 text-lg">Uptime</span>
+              <i class="fas fa-clock text-red-500 text-xl"></i>
+            </div>
+            <div class="text-2xl font-bold flex items-center justify-center h-10">
+              <span id="uptime">12h 34m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-3 gap-6 mb-8">
+        <button id="files-button" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
+          <i class="fas fa-folder text-3xl text-red-500 mb-3"></i>
+          <span class="text-lg">Files</span>
+        </button>
+        <button id="my-path-button" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
+          <i class="fas fa-map-marker-alt text-3xl text-red-500 mb-3"></i>
+          <span class="text-lg">My Path</span>
+        </button>
+        <button id="stop-button" class="glass-effect p-6 rounded-lg hover:bg-red-900 transition-all duration-200 text-center flex flex-col items-center justify-center">
+          <i class="fas fa-stop-circle text-3xl text-red-500 mb-3"></i>
+          <span class="text-lg">Stop</span>
+        </button>
+      </div>
+
+      <!-- File Management Section -->
+      <div id="file-management-section" class="mb-8 glass-effect rounded-lg p-6">
+        <div class="flex items-center mb-6">
+          <i class="fas fa-file-alt text-red-500 mr-2 text-xl"></i>
+          <h2 class="text-xl font-bold">File Management</h2>
+        </div>
+
+        <!-- Create Section -->
+        <div class="bg-gray-800 p-6 rounded-lg mb-6 border border-gray-700">
+          <div class="flex flex-col md:flex-row gap-6 items-center">
+            <button id="create-folder-button" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded text-white transition-all duration-200 flex items-center justify-center text-lg">
+              <i class="fas fa-folder-plus mr-2"></i>
+              Create Folder
+            </button>
+            <button id="create-file-button" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded text-white transition-all duration-200 flex items-center justify-center text-lg">
+              <i class="fas fa-file-medical mr-2"></i>
+              Create File
+            </button>
+          </div>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="bg-gray-800 p-6 rounded-lg mb-6 border border-gray-700">
+          <div class="flex flex-col md:flex-row gap-6 items-center">
+            <div class="relative w-full">
+              <input type="file" id="file-upload" class="hidden">
+              <label for="file-upload" class="cursor-pointer w-full flex items-center justify-center p-3 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors text-lg">
+                <i class="fas fa-cloud-upload-alt mr-2"></i>
+                <span>Choose File</span>
+              </label>
+              <span id="file-name" class="mt-2 text-base text-gray-400 block">No file chosen</span>
+            </div>
+            <button id="upload-button" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded text-white transition-all duration-200 flex items-center justify-center text-lg">
+              <i class="fas fa-upload mr-2"></i>
+              Upload
+            </button>
+          </div>
+          <div class="mt-3 text-sm text-gray-400">
+            <p>Supports any file type including ZIP archives (will be automatically extracted)</p>
+          </div>
+        </div>
+
+        <!-- File Management Area -->
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+          <div class="relative mb-6">
+            <select id="file-list" class="w-full p-4 bg-gray-700 border-2 border-red-500 rounded text-white appearance-none h-increased">
+              <option value="">-- Select a file or folder --</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-red-500">
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+
+          <div class="flex justify-between mb-6">
+            <button id="delete-button" class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded text-white transition-all duration-200 flex items-center text-lg">
+              <i class="fas fa-trash-alt mr-2"></i>
+              Delete
+            </button>
+            <button id="view-button" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded text-white transition-all duration-200 flex items-center text-lg">
+              <i class="fas fa-eye mr-2"></i>
+              View Content
+            </button>
+          </div>
+          
+          <div class="relative">
+            <textarea id="file-content" class="w-full textarea-increased p-4 bg-gray-700 border-2 border-red-500 rounded text-white" readonly>// File content will appear here when you select a file and click "View Content"</textarea>
+            <div class="absolute top-3 right-3 flex">
+              <button id="copy-button" class="p-2 bg-gray-600 rounded text-white hover:bg-gray-500 transition-colors">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log Display -->
+      <div class="mb-8">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-list-alt text-red-500 mr-2 text-xl"></i>
+          <h2 class="text-xl font-bold">System Logs</h2>
+        </div>
+        <div id="log-display" class="p-6 glass-effect rounded-lg text-green-400 font-mono text-base log-increased overflow-y-auto">
+          <div class="mb-2">[INFO] <span class="text-gray-400">2025-05-10 08:15:22</span> System initialized</div>
+          <div class="mb-2">[INFO] <span class="text-gray-400">2025-05-10 08:15:23</span> Web server started on port 3000</div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center p-6 text-gray-500 text-base">
+      <p>© 2025 Command Center | Server Version 3.7.2</p>
+    </footer>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
