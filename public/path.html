@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Path - Hosting Control Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-black text-white font-sans min-h-screen">
+  <div class="container-wide p-4 md:p-6">
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-6 glass-effect rounded-lg p-6">
+      <div class="flex items-center">
+        <i class="fas fa-server text-red-500 text-4xl mr-3"></i>
+        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-500">Command Center</h1>
+      </div>
+      <div class="text-lg text-gray-400">
+        <span id="server-status" class="inline-flex items-center">
+          <span class="h-3 w-3 rounded-full bg-green-500 mr-2 pulse-alert"></span>
+          System Active
+        </span>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <div class="flex items-center mb-6">
+      <a href="index.html" class="text-red-500 hover:text-red-400 transition-colors">
+        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+      </a>
+    </div>
+
+    <!-- Path Info -->
+    <div class="mb-8 glass-effect rounded-lg p-6">
+      <div class="flex items-center mb-6">
+        <i class="fas fa-map-marker-alt text-red-500 mr-3 text-2xl"></i>
+        <h2 class="text-2xl font-bold">Current Path Information</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+          <div class="flex items-center mb-2">
+            <i class="fas fa-folder-open text-yellow-500 mr-2"></i>
+            <h3 class="text-lg font-bold">Current Directory</h3>
+          </div>
+          <div class="bg-gray-900 p-3 rounded-lg text-gray-300 font-mono text-sm">
+            /home/user/www/
+          </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+          <div class="flex items-center mb-2">
+            <i class="fas fa-cog text-blue-500 mr-2"></i>
+            <h3 class="text-lg font-bold">Server Configuration Path</h3>
+          </div>
+          <div class="bg-gray-900 p-3 rounded-lg text-gray-300 font-mono text-sm">
+            /etc/nginx/sites-available/mysite.conf
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+          <div class="flex items-center mb-2">
+            <i class="fas fa-database text-green-500 mr-2"></i>
+            <h3 class="text-lg font-bold">Database Path</h3>
+          </div>
+          <div class="bg-gray-900 p-3 rounded-lg text-gray-300 font-mono text-sm">
+            /var/lib/mysql/appdb/
+          </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+          <div class="flex items-center mb-2">
+            <i class="fas fa-lock text-red-500 mr-2"></i>
+            <h3 class="text-lg font-bold">SSL Certificate Path</h3>
+          </div>
+          <div class="bg-gray-900 p-3 rounded-lg text-gray-300 font-mono text-sm">
+            /etc/letsencrypt/live/example.com/
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="flex items-center mb-2">
+          <i class="fas fa-clipboard-list text-purple-500 mr-2"></i>
+          <h3 class="text-lg font-bold">Available Paths</h3>
+        </div>
+        <div class="bg-gray-900 p-3 rounded-lg text-gray-300 font-mono text-sm">
+          <div class="mb-2"><i class="fas fa-folder text-yellow-500 mr-2"></i>/home/user/www/ <span class="text-xs text-gray-500">(web root)</span></div>
+          <div class="mb-2"><i class="fas fa-folder text-yellow-500 mr-2"></i>/home/user/backup/ <span class="text-xs text-gray-500">(backup directory)</span></div>
+          <div class="mb-2"><i class="fas fa-folder text-yellow-500 mr-2"></i>/var/log/nginx/ <span class="text-xs text-gray-500">(nginx logs)</span></div>
+          <div class="mb-2"><i class="fas fa-folder text-yellow-500 mr-2"></i>/var/log/mysql/ <span class="text-xs text-gray-500">(mysql logs)</span></div>
+          <div class="mb-2"><i class="fas fa-folder text-yellow-500 mr-2"></i>/etc/nginx/ <span class="text-xs text-gray-500">(nginx configuration)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Path Actions -->
+    <div class="mb-8 glass-effect rounded-lg p-6">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-tools text-indigo-500 mr-3 text-2xl"></i>
+        <h2 class="text-2xl font-bold">Path Actions</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button class="bg-red-600 hover:bg-red-500 transition-colors text-white font-bold py-2 px-4 rounded-lg flex items-center">
+          <i class="fas fa-trash-alt mr-2"></i> Delete Path
+        </button>
+        <button class="bg-blue-600 hover:bg-blue-500 transition-colors text-white font-bold py-2 px-4 rounded-lg flex items-center">
+          <i class="fas fa-edit mr-2"></i> Edit Configuration
+        </button>
+        <button class="bg-green-600 hover:bg-green-500 transition-colors text-white font-bold py-2 px-4 rounded-lg flex items-center">
+          <i class="fas fa-download mr-2"></i> Backup Now
+        </button>
+        <button class="bg-yellow-500 hover:bg-yellow-400 transition-colors text-black font-bold py-2 px-4 rounded-lg flex items-center">
+          <i class="fas fa-folder-open mr-2"></i> Open in File Manager
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 mt-10 text-sm">
+      &copy; 2025 Hosting Control Panel. All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>lg p-6
