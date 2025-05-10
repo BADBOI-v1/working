@@ -6,7 +6,54 @@
     <title>Hosting Control Panel</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="styles.css" rel="stylesheet">
+    <style>
+        /* Custom Pulse Animation for Alert States */
+        @keyframes pulse-effect {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+        .pulse-alert {
+            animation: pulse-effect 2s infinite;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dc2626;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b91c1c;
+        }
+        /* Glassmorphism Effect */
+        .glass-effect {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+        /* Custom container width */
+        .container-wide {
+            width: 95%;
+            max-width: 1920px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Increased height for elements */
+        .h-increased {
+            height: 60px;
+        }
+        .textarea-increased {
+            height: 220px;
+        }
+        .log-increased {
+            height: 300px;
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-black text-white font-sans min-h-screen">
   <div class="container-wide p-4 md:p-6">
@@ -23,22 +70,6 @@
         </span>
       </div>
     </header>
-
-    <!-- Log Display (Moved to top) -->
-    <div class="mb-8">
-      <div class="flex items-center mb-4">
-        <i class="fas fa-list-alt text-red-500 mr-2 text-xl"></i>
-        <h2 class="text-xl font-bold">System Logs</h2>
-      </div>
-      <div id="log-display" class="p-6 glass-effect rounded-lg text-green-400 font-mono text-base log-increased overflow-y-auto">
-        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:15:22</span> System initialized</div>
-        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:15:23</span> Web server started on port 8080</div>
-        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:16:05</span> User authentication successful</div>
-        <div class="mb-2">[WARN] <span class="text-gray-400">2025-03-29 08:17:12</span> <span class="text-yellow-400">High CPU usage detected (82%)</span></div>
-        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:17:45</span> Resource usage normalized</div>
-        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:20:30</span> File 'config.json' updated</div>
-      </div>
-    </div>
 
     <!-- Command Section -->
     <div class="mb-8 glass-effect rounded-lg p-6">
@@ -110,19 +141,36 @@
 
     <!-- Action Buttons -->
     <div class="grid grid-cols-3 gap-6 mb-8">
-      <a href="file-management.html" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
+      <a href="file-management.html" id="files-button" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
         <i class="fas fa-folder text-3xl text-red-500 mb-3"></i>
         <span class="text-lg">Files</span>
       </a>
-      <a href="path.html" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
+      <button id="my-path-button" class="glass-effect p-6 rounded-lg hover:bg-gray-800 transition-all duration-200 text-center flex flex-col items-center justify-center">
         <i class="fas fa-map-marker-alt text-3xl text-red-500 mb-3"></i>
         <span class="text-lg">My Path</span>
-      </a>
+      </button>
       <button id="stop-button" class="glass-effect p-6 rounded-lg hover:bg-red-900 transition-all duration-200 text-center flex flex-col items-center justify-center">
         <i class="fas fa-stop-circle text-3xl text-red-500 mb-3"></i>
         <span class="text-lg">Stop</span>
       </button>
     </div>
+
+    <!-- Log Display -->
+    <div class="mb-8">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-list-alt text-red-500 mr-2 text-xl"></i>
+        <h2 class="text-xl font-bold">System Logs</h2>
+      </div>
+      <div id="log-display" class="p-6 glass-effect rounded-lg text-green-400 font-mono text-base log-increased overflow-y-auto">
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:15:22</span> System initialized</div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:15:23</span> Web server started on port 8080</div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:16:05</span> User authentication successful</div>
+        <div class="mb-2">[WARN] <span class="text-gray-400">2025-03-29 08:17:12</span> <span class="text-yellow-400">High CPU usage detected (82%)</span></div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:17:45</span> Resource usage normalized</div>
+        <div class="mb-2">[INFO] <span class="text-gray-400">2025-03-29 08:20:30</span> File 'config.json' updated</div>
+      </div>
+    </div>
+
   </div>
 
   <footer class="text-center p-6 text-gray-500 text-base">
@@ -157,4 +205,4 @@
     }, 3000);
   </script>
 </body>
-          </html>
+            </html>
