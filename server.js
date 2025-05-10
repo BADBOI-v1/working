@@ -5,10 +5,6 @@ const os = require('os');
 const fs = require('fs');
 const socketIO = require('socket.io');
 const AdmZip = require('adm-zip');
-const bcrypt = require('bcrypt');
-const session = require('express-session');
-const bodyParser = require('body-parser');
-
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -20,129 +16,7 @@ const server = app.listen(port, () => {
 });
 
 const io = socketIO(server);
-// Add these to the top of your server.js file with your other requires
 
-// Add a simple in-memory user database (in a production app, use a real database)
-const users = {};
-
-// Add these before app.use(express.static(...))
-app.use(bodyParser.json());
-app.use(session({
-    secret: 'Idowu@09876',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
-}));
-
-// User registration endpoint
-app.post('/api/register', async (req, res) => {
-    const { username, password } = req.body;
-    
-    // Check if username already exists
-    if (users[username]) {
-        return res.status(400).json({ error: 'Username already exists' });
-    }
-    
-    try {
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // Store the user
-        users[username] = {
-            username,
-            password: hashedPassword,
-            createdAt: new Date()
-        };
-        
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Registration failed' });
-    }
-});
-
-// User login endpoint
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    
-    // Check if user exists
-    const user = users[username];
-    if (!user) {
-        return res.status(401).json({ error: 'Invalid username or password' });
-    }
-    
-    try {
-        // Compare password with hash
-        const match = await bcrypt.compare(password, user.password);
-        
-        if (match) {
-            // Set session data
-            req.session.user = {
-                username: user.username,
-                loggedIn: true
-            };
-            
-            res.json({ 
-                message: 'Login successful',
-                user: {
-                    username: user.username
-                }
-            });
-        } else {
-            res.status(401).json({ error: 'Invalid username or password' });
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ error: 'Login failed' });
-    }
-});
-
-// User logout endpoint
-app.post('/api/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            return res.status(500).json({ error: 'Logout failed' });
-        }
-        res.json({ message: 'Logout successful' });
-    });
-});
-
-// Check authentication status
-app.get('/api/auth-status', (req, res) => {
-    if (req.session.user && req.session.user.loggedIn) {
-        res.json({ 
-            authenticated: true, 
-            user: {
-                username: req.session.user.username
-            }
-        });
-    } else {
-        res.json({ authenticated: false });
-    }
-});
-
-// Add this to your io.on('connection') block to check user authentication
-io.use((socket, next) => {
-    const session = socket.request.session;
-    if (session && session.user && session.user.loggedIn) {
-        next();
-    } else {
-        next(new Error('Authentication required'));
-    }
-});
-
-// Make sure express-socket.io-session is configured properly
-const sessionMiddleware = session({
-    secret: 'Idowu@09876',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
-});
-
-app.use(sessionMiddleware);
-io.use((socket, next) => {
-    sessionMiddleware(socket.request, {}, next);
-});
 // Function to get resource usage
 function getResourceUsage() {
     const totalMemory = os.totalmem();
