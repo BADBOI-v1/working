@@ -1,0 +1,525 @@
+/* Command Center - Advanced CSS Styling */
+
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Source+Code+Pro:wght@300;400;500;700&display=swap');
+
+/* Base styling */
+:root {
+  --primary-red: #dc2626;
+  --primary-red-hover: #b91c1c;
+  --glow-red: rgba(220, 38, 38, 0.7);
+  --bg-dark: #111827;
+  --bg-darker: #0f172a;
+  --card-bg: rgba(17, 24, 39, 0.8);
+  --border-light: rgba(220, 38, 38, 0.3);
+  --input-bg: #1f2937;
+  --text-gray: #9ca3af;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Source Code Pro', monospace;
+  background: linear-gradient(135deg, var(--bg-darker) 0%, #000 100%);
+  color: #fff;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Custom cursor */
+body::before {
+  content: '';
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: var(--primary-red);
+  position: fixed;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 0 15px 2px var(--glow-red);
+  animation: cursor-follow 0.05s infinite;
+}
+
+@keyframes cursor-follow {
+  0% { opacity: 0.7; }
+  100% { opacity: 0.9; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-red);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-red-hover);
+  box-shadow: 0 0 10px var(--glow-red);
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Enhanced glassmorphism effect */
+.glass-effect {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.18);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-effect:hover {
+  box-shadow: 0 8px 32px 0 rgba(220, 38, 38, 0.2);
+  transform: translateY(-3px);
+}
+
+/* Header animations */
+header.glass-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+header.glass-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: header-shine 6s infinite linear;
+}
+
+@keyframes header-shine {
+  0% { transform: translateX(-50%) rotate(30deg); }
+  100% { transform: translateX(50%) rotate(30deg); }
+}
+
+/* Title animations */
+h1.text-transparent {
+  background-size: 200% auto;
+  animation: text-gradient 4s linear infinite;
+}
+
+@keyframes text-gradient {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
+/* Status indicators */
+#server-status {
+  position: relative;
+}
+
+#server-status .bg-green-500 {
+  position: relative;
+}
+
+/* Enhanced pulse animation */
+@keyframes pulse-effect {
+  0% { 
+    box-shadow: 0 0 0 0 var(--glow-red);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 15px 5px var(--glow-red);
+    transform: scale(1.2);
+  }
+  100% { 
+    box-shadow: 0 0 0 0 var(--glow-red);
+    transform: scale(1);
+  }
+}
+
+.pulse-alert {
+  animation: pulse-effect 2s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+/* Command Input Styling */
+#command-input {
+  border-color: var(--primary-red);
+  box-shadow: 0 0 5px var(--glow-red);
+  transition: all 0.3s ease;
+}
+
+#command-input:focus {
+  box-shadow: 0 0 15px var(--glow-red);
+  border-width: 2px;
+}
+
+#send-button {
+  position: relative;
+  overflow: hidden;
+}
+
+#send-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.5s ease;
+  opacity: 0;
+}
+
+#send-button:hover::after {
+  opacity: 1;
+  transform: translateX(100%) rotate(30deg);
+  transition: all 0.7s ease;
+}
+
+/* Progress bars animation */
+.bg-red-500 {
+  position: relative;
+  transition: width 1s ease;
+}
+
+.bg-red-500::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Action buttons hover effects */
+.flex-col.items-center i {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.flex-col.items-center:hover i {
+  transform: translateY(-5px) scale(1.2);
+  color: #fff;
+  text-shadow: 0 0 10px var(--glow-red);
+}
+
+#stop-button:hover {
+  background: #7f1d1d;
+}
+
+#stop-button:hover i {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* File Management Section Styling */
+#file-management {
+  position: relative;
+}
+
+#file-management::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at top right,
+    rgba(220, 38, 38, 0.1),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Input focus states */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 15px var(--glow-red);
+}
+
+/* File upload styling */
+label[for="file-upload"] {
+  position: relative;
+  overflow: hidden;
+}
+
+label[for="file-upload"]::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 100%;
+  top: 0;
+  right: -100px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  animation: upload-shine 3s infinite;
+}
+
+@keyframes upload-shine {
+  0% { right: -100px; }
+  20%, 100% { right: 200%; }
+}
+
+/* Button hover animations */
+button {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+button:hover::before {
+  width: 300%;
+  height: 300%;
+}
+
+/* Log display styling */
+#log-display {
+  font-family: 'Source Code Pro', monospace;
+  position: relative;
+  overflow-y: auto;
+}
+
+#log-display div {
+  position: relative;
+  padding-left: 10px;
+  border-left: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+#log-display div:hover {
+  border-left: 2px solid var(--primary-red);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(5px);
+}
+
+/* Log entry animations */
+@keyframes log-entry {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+#log-display div:last-child {
+  animation: log-entry 0.3s ease-out forwards;
+}
+
+/* Typing effect for logs */
+.typing-effect {
+  overflow: hidden;
+  border-right: 2px solid var(--primary-red);
+  white-space: nowrap;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--primary-red) }
+}
+
+/* Footer styling */
+footer {
+  position: relative;
+  overflow: hidden;
+}
+
+footer p {
+  position: relative;
+  z-index: 1;
+}
+
+footer::before {
+  content: '';
+  position: absolute;
+  height: 1px;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(to right, transparent, var(--primary-red), transparent);
+}
+
+/* Notifications */
+.fixed.bottom-4.right-4 {
+  animation: notification-slide 0.3s ease-out forwards, notification-fade 2s 0.3s forwards;
+  transform: translateY(20px);
+  opacity: 0;
+}
+
+@keyframes notification-slide {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes notification-fade {
+  0% { opacity: 1; }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* Grid layout animations */
+.grid {
+  perspective: 1000px;
+}
+
+.grid > div {
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+
+.grid > div:hover {
+  transform: translateZ(20px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px var(--glow-red);
+}
+
+/* Added matrix rain effect in background */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+  .grid > div:hover {
+    transform: none;
+  }
+  
+  .glass-effect:hover {
+    transform: none;
+  }
+  
+  body::before {
+    display: none; /* Disable cursor effect on mobile */
+  }
+}
+
+/* Enhanced animations for buttons */
+@keyframes button-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+  70% { box-shadow: 0 0 10px 10px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+/* Card entrance animations */
+@keyframes card-entrance {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.glass-effect {
+  animation: card-entrance 0.5s ease-out forwards;
+  animation-delay: calc(var(--card-index, 0) * 0.1s);
+}
+
+/* Loading indicator */
+.loading {
+  position: relative;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(to right, transparent, var(--primary-red), transparent);
+  animation: loading-bar 2s infinite;
+}
+
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .container-wide {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  header h1 {
+    font-size: 1.5rem;
+  }
+  
+  #log-display {
+    height: 200px;
+  }
+  
+  .textarea-increased {
+    height: 150px;
+  }
+}
